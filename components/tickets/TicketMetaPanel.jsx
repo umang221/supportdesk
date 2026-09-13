@@ -5,7 +5,7 @@ const CHANNEL_LABELS = { email: "Email", chat: "Chat", phone: "Phone" };
 /** Ticket metadata: ID, channel, and the created/updated/due timestamps. */
 export function TicketMetaPanel({ ticket }) {
   return (
-    <div className="space-y-2 border-b border-border-subtle p-lg">
+    <div className="space-y-2 border-b border-border-subtle p-space-lg">
       <h3 className="text-label-sm font-medium text-text-secondary">Details</h3>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-label-sm">
         <dt className="text-text-tertiary">Ticket ID</dt>

@@ -34,7 +34,7 @@ export function PortalTicketList({ tickets, initialNow }) {
 
   if (tickets.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border-subtle p-2xl text-center">
+      <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border-subtle p-space-2xl text-center">
         <p className="text-body-md font-medium text-text-primary">No tickets yet</p>
         <p className="max-w-sm text-body-sm text-text-tertiary">
           Tickets you open with our support team will show up here.
@@ -79,7 +79,7 @@ export function PortalTicketList({ tickets, initialNow }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center gap-1 rounded-lg border border-dashed border-border-subtle p-xl text-center">
+        <div className="flex flex-col items-center gap-1 rounded-lg border border-dashed border-border-subtle p-space-xl text-center">
           <p className="text-body-md font-medium text-text-primary">No tickets match these filters</p>
           <p className="text-body-sm text-text-tertiary">Try a different search term or status.</p>
         </div>
@@ -94,7 +94,7 @@ export function PortalTicketList({ tickets, initialNow }) {
               <li key={ticket.id}>
                 <Link
                   href={`/portal/tickets/${ticket.id}`}
-                  className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-surface-card p-md transition-colors hover:border-border-strong hover:bg-surface-hover sm:flex-row sm:items-center sm:gap-3"
+                  className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-surface-card p-space-md transition-colors hover:border-border-strong hover:bg-surface-hover sm:flex-row sm:items-center sm:gap-3"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-body-sm font-medium text-text-primary">{ticket.subject}</p>

@@ -9,7 +9,7 @@ import { CloseIcon } from "@/components/ui/icons";
  * Overall page frame: fixed sidebar + header on desktop, collapsing to an
  * off-canvas drawer below the `lg` breakpoint (DESIGN.md §Layout & Spacing).
  * `activeHref`/`user`/`sidebarFooter` are passed straight through to the
- * nav/header primitives; omit `user` until real auth data exists. `navVariant`
+ * nav/header primitives. `navVariant`
  * lets a section (e.g. the admin area) swap in a different nav list instead
  * of Sidebar's default — passed as a plain string (not the icon-bearing item
  * list itself) since that list contains component references, and those

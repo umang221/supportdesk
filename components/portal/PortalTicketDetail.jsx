@@ -56,7 +56,7 @@ export function PortalTicketDetail({ ticket, customer, assignee, team, messages,
       </Link>
 
       <div className="rounded-lg border border-border-subtle bg-surface-card">
-        <div className="border-b border-border-subtle p-lg">
+        <div className="border-b border-border-subtle p-space-lg">
           <p className="font-mono text-label-sm text-text-tertiary">{ticket.id}</p>
           <h1 className="text-headline-sm text-text-primary">{ticket.subject}</h1>
 
@@ -67,14 +67,14 @@ export function PortalTicketDetail({ ticket, customer, assignee, team, messages,
           </div>
 
           {isClosed ? (
-            <p className="mt-3 rounded-md bg-canvas-bg px-sm py-xs text-label-sm text-text-tertiary">
+            <p className="mt-3 rounded-md bg-canvas-bg px-space-sm py-space-xs text-label-sm text-text-tertiary">
               This ticket is {statusMeta?.label?.toLowerCase() ?? "closed"}. Replying won&rsquo;t reopen it
               automatically — for anything new, our team will follow up here or you can open a new ticket.
             </p>
           ) : null}
         </div>
 
-        <div className="flex items-center gap-2 border-b border-border-subtle p-lg">
+        <div className="flex items-center gap-2 border-b border-border-subtle p-space-lg">
           <Avatar name={assignee?.name} size="sm" />
           <div className="min-w-0">
             <p className="truncate text-body-sm text-text-primary">

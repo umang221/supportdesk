@@ -15,7 +15,7 @@ function TeamCard({ team, teamAgents, teamTickets }) {
   const open = teamTickets.filter((t) => OPEN_STATUSES.has(t.status)).length;
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-border-subtle bg-surface-card p-lg">
+    <div className="flex flex-col gap-4 rounded-lg border border-border-subtle bg-surface-card p-space-lg">
       <div>
         <h3 className="text-body-md font-semibold text-text-primary">{team.name}</h3>
         <p className="text-body-sm text-text-tertiary">{team.description}</p>
@@ -72,7 +72,7 @@ export function AdminTeams({ teams, agents, tickets }) {
       </label>
 
       {filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border-subtle p-xl text-center">
+        <div className="rounded-lg border border-dashed border-border-subtle p-space-xl text-center">
           <p className="text-body-md font-medium text-text-primary">No teams match this search</p>
           <p className="text-body-sm text-text-tertiary">Try a different search term.</p>
         </div>

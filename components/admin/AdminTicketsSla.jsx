@@ -56,19 +56,19 @@ export function AdminTicketsSla({ tickets, teams, customersById, teamsById, agen
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-lg border border-border-subtle bg-surface-card p-lg">
+        <div className="rounded-lg border border-border-subtle bg-surface-card p-space-lg">
           <p className="text-label-sm text-text-tertiary">Total</p>
           <p className="text-headline-metric text-text-primary">{tickets.length}</p>
         </div>
-        <div className="rounded-lg border border-border-subtle bg-surface-card p-lg">
+        <div className="rounded-lg border border-border-subtle bg-surface-card p-space-lg">
           <p className="text-label-sm text-text-tertiary">Unassigned</p>
           <p className="text-headline-metric text-text-primary">{tickets.filter((t) => !t.assigneeId).length}</p>
         </div>
-        <div className="rounded-lg border border-border-subtle bg-surface-card p-lg">
+        <div className="rounded-lg border border-border-subtle bg-surface-card p-space-lg">
           <p className="text-label-sm text-text-tertiary">Critical</p>
           <p className="text-headline-metric text-sla-critical">{criticalCount}</p>
         </div>
-        <div className="rounded-lg border border-border-subtle bg-surface-card p-lg">
+        <div className="rounded-lg border border-border-subtle bg-surface-card p-space-lg">
           <p className="text-label-sm text-text-tertiary">Breached</p>
           <p className="text-headline-metric text-sla-critical">{breachedCount}</p>
         </div>
@@ -153,7 +153,7 @@ export function AdminTicketsSla({ tickets, teams, customersById, teamsById, agen
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border-subtle p-xl text-center">
+        <div className="rounded-lg border border-dashed border-border-subtle p-space-xl text-center">
           <p className="text-body-md font-medium text-text-primary">No tickets match these filters</p>
           <p className="text-body-sm text-text-tertiary">Try clearing a filter or adjusting your search.</p>
         </div>

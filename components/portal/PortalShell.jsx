@@ -25,7 +25,7 @@ export function PortalShell({ activeHref, customer, children }) {
   return (
     <div className="flex min-h-dvh flex-col bg-canvas-bg">
       <header className="border-b border-border-subtle bg-surface-card">
-        <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-lg">
+        <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-space-lg">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-semibold text-white">
             S
           </span>
@@ -41,7 +41,7 @@ export function PortalShell({ activeHref, customer, children }) {
                   href={href}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-md px-sm py-xs text-label-sm font-medium transition-colors",
+                    "flex items-center gap-1.5 rounded-md px-space-sm py-space-xs text-label-sm font-medium transition-colors",
                     isActive
                       ? "bg-accent-subtle text-primary"
                       : "text-text-secondary hover:bg-surface-hover hover:text-text-primary"
@@ -69,7 +69,7 @@ export function PortalShell({ activeHref, customer, children }) {
         </div>
 
         {isMenuOpen ? (
-          <nav aria-label="Portal" className="border-t border-border-subtle px-lg py-sm md:hidden">
+          <nav aria-label="Portal" className="border-t border-border-subtle px-space-lg py-space-sm md:hidden">
             <ul className="space-y-1">
               {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
                 const isActive = href === activeHref;
@@ -80,7 +80,7 @@ export function PortalShell({ activeHref, customer, children }) {
                       onClick={() => setMenuOpen(false)}
                       aria-current={isActive ? "page" : undefined}
                       className={cn(
-                        "flex items-center gap-2 rounded-md px-sm py-sm text-body-sm font-medium",
+                        "flex items-center gap-2 rounded-md px-space-sm py-space-sm text-body-sm font-medium",
                         isActive
                           ? "bg-accent-subtle text-primary"
                           : "text-text-secondary hover:bg-surface-hover"
@@ -97,7 +97,7 @@ export function PortalShell({ activeHref, customer, children }) {
         ) : null}
       </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-lg py-lg">{children}</main>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-space-lg py-space-lg">{children}</main>
     </div>
   );
 }

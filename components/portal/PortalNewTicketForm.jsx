@@ -42,12 +42,12 @@ export function PortalNewTicketForm() {
   if (submitted) {
     const priorityMeta = findMeta(PRIORITY_LIST, submitted.priority);
     return (
-      <div className="flex flex-col items-center gap-3 rounded-lg border border-border-subtle bg-surface-card p-2xl text-center">
+      <div className="flex flex-col items-center gap-3 rounded-lg border border-border-subtle bg-surface-card p-space-2xl text-center">
         <p className="text-body-md font-medium text-text-primary">Ticket submitted</p>
         <p className="max-w-sm text-body-sm text-text-tertiary">
           We&rsquo;ve received your request and a member of our team will get back to you shortly.
         </p>
-        <div className="flex items-center gap-2 rounded-md bg-canvas-bg px-md py-sm">
+        <div className="flex items-center gap-2 rounded-md bg-canvas-bg px-space-md py-space-sm">
           <span className="font-mono text-label-sm text-text-tertiary">{submitted.id}</span>
           <Badge variant={priorityMeta?.badgeVariant}>{priorityMeta?.label}</Badge>
         </div>
@@ -82,7 +82,7 @@ export function PortalNewTicketForm() {
           value={subject}
           onChange={(event) => setSubject(event.target.value)}
           placeholder="Briefly describe the issue"
-          className="h-9 rounded-lg border border-border-subtle bg-surface-card px-sm text-body-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent-subtle"
+          className="h-9 rounded-lg border border-border-subtle bg-surface-card px-space-sm text-body-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent-subtle"
         />
       </div>
 
@@ -115,7 +115,7 @@ export function PortalNewTicketForm() {
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           placeholder="Include any details that might help — what you expected, what happened instead, and when it started."
-          className="resize-none rounded-lg border border-border-subtle bg-surface-card p-sm text-body-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent-subtle"
+          className="resize-none rounded-lg border border-border-subtle bg-surface-card p-space-sm text-body-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent-subtle"
         />
       </div>
 

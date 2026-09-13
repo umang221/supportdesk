@@ -32,7 +32,7 @@ function TicketLine({ ticket, now }) {
   return (
     <Link
       href={`/portal/tickets/${ticket.id}`}
-      className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-card p-md transition-colors hover:border-border-strong hover:bg-surface-hover"
+      className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-card p-space-md transition-colors hover:border-border-strong hover:bg-surface-hover"
     >
       <div className="min-w-0 flex-1">
         <p className="truncate text-body-sm font-medium text-text-primary">{ticket.subject}</p>
@@ -62,7 +62,7 @@ export function PortalDashboard({ customer, tickets, initialNow }) {
 
   if (tickets.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border-subtle p-2xl text-center">
+      <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border-subtle p-space-2xl text-center">
         <p className="text-body-md font-medium text-text-primary">
           Welcome, {customer?.name?.split(" ")[0] ?? "there"}
         </p>

@@ -16,7 +16,7 @@ export function Badge({ variant = "muted", className, children, ...props }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md border px-sm py-xs text-label-sm",
+        "inline-flex items-center gap-1 rounded-md border px-space-sm py-space-xs text-label-sm",
         VARIANT_CLASSES[variant],
         className
       )}

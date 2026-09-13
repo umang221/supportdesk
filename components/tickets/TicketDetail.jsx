@@ -9,7 +9,7 @@ import { TicketDetailSkeleton } from "./TicketDetailSkeleton";
 
 function EmptyState() {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-1 p-xl text-center">
+    <div className="flex h-full flex-col items-center justify-center gap-1 p-space-xl text-center">
       <p className="text-body-md font-medium text-text-primary">No ticket selected</p>
       <p className="text-body-sm text-text-tertiary">Choose a ticket from the queue to see its details.</p>
     </div>

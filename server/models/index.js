@@ -1,4 +1,5 @@
 export { default as User } from "./User";
+export { default as Session } from "./Session";
 export { default as Team } from "./Team";
 export { default as Customer } from "./Customer";
 export { default as Ticket } from "./Ticket";

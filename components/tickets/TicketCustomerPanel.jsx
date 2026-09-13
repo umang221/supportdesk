@@ -4,7 +4,7 @@ import { Avatar } from "@/components/ui/Avatar";
 export function TicketCustomerPanel({ customer }) {
   if (!customer) {
     return (
-      <div className="border-b border-border-subtle p-lg">
+      <div className="border-b border-border-subtle p-space-lg">
         <h3 className="mb-2 text-label-sm font-medium text-text-secondary">Customer</h3>
         <p className="text-body-sm text-text-tertiary">Customer information unavailable.</p>
       </div>
@@ -12,7 +12,7 @@ export function TicketCustomerPanel({ customer }) {
   }
 
   return (
-    <div className="space-y-3 border-b border-border-subtle p-lg">
+    <div className="space-y-3 border-b border-border-subtle p-space-lg">
       <h3 className="text-label-sm font-medium text-text-secondary">Customer</h3>
 
       <div className="flex items-center gap-2">

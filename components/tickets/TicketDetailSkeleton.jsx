@@ -11,7 +11,7 @@ function Bar({ className }) {
  */
 export function TicketDetailSkeleton() {
   return (
-    <div role="status" aria-label="Loading ticket details" className="flex h-full flex-col gap-6 p-lg">
+    <div role="status" aria-label="Loading ticket details" className="flex h-full flex-col gap-6 p-space-lg">
       <div className="space-y-2">
         <Bar className="h-3 w-16" />
         <Bar className="h-5 w-2/3" />

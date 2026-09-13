@@ -8,9 +8,9 @@ const VARIANT_CLASSES = {
 };
 
 const SIZE_CLASSES = {
-  compact: "h-[30px] px-sm text-label-md",
-  default: "h-9 px-md text-label-md",
-  lg: "h-[42px] px-lg text-body-lg font-semibold",
+  compact: "h-[30px] px-space-sm text-label-md",
+  default: "h-9 px-space-md text-label-md",
+  lg: "h-[42px] px-space-lg text-body-lg font-semibold",
 };
 
 /**

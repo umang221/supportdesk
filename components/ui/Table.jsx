@@ -5,7 +5,7 @@ export function TableHeaderCell({ className, children, ...props }) {
   return (
     <th
       className={cn(
-        "border-b border-border-subtle bg-canvas-bg px-md py-sm text-left text-[11px] font-medium uppercase tracking-wide text-text-secondary",
+        "border-b border-border-subtle bg-canvas-bg px-space-md py-space-sm text-left text-[11px] font-medium uppercase tracking-wide text-text-secondary",
         className
       )}
       {...props}
@@ -37,7 +37,7 @@ export function TableRow({ selected = false, className, children, ...props }) {
 /** Standard data cell — pair with TableRow. */
 export function TableCell({ className, children, ...props }) {
   return (
-    <td className={cn("px-md py-sm align-middle text-body-sm text-text-primary", className)} {...props}>
+    <td className={cn("px-space-md py-space-sm align-middle text-body-sm text-text-primary", className)} {...props}>
       {children}
     </td>
   );

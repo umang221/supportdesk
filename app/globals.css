@@ -102,15 +102,22 @@
   --text-sla-counter--letter-spacing: 0.02em;
   --text-sla-counter--font-weight: 600;
 
-  /* Spacing scale additions (DESIGN.md "space-*" tokens, prefix dropped) */
-  --spacing-2xs: 0.125rem;
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 0.75rem;
-  --spacing-lg: 1rem;
-  --spacing-xl: 1.5rem;
-  --spacing-2xl: 2rem;
-  --spacing-3xl: 3rem;
+  /*
+   * Spacing scale additions (DESIGN.md "space-*" tokens). Named "space-*"
+   * (not bare "sm"/"md"/etc.) because Tailwind v4 resolves named max-width
+   * and width utilities against the same --spacing-{key} theme namespace
+   * as these padding/gap tokens; a bare --spacing-sm here would silently
+   * override Tailwind's built-in max-w-sm (24rem) with our 0.5rem value.
+   * Utility classes are p-space-sm, gap-space-lg, etc. — not p-sm.
+   */
+  --spacing-space-2xs: 0.125rem;
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 0.75rem;
+  --spacing-space-lg: 1rem;
+  --spacing-space-xl: 1.5rem;
+  --spacing-space-2xl: 2rem;
+  --spacing-space-3xl: 3rem;
   --spacing-gutter: 1rem;
   --spacing-gutter-desktop: 1.5rem;
   --spacing-margin: 1.25rem;

@@ -1,11 +1,15 @@
 import { AppShell } from "@/components/layout/AppShell";
+import { UserMenu } from "@/components/layout/UserMenu";
 import { AgentWorkspace } from "@/components/tickets/AgentWorkspace";
+import { getCurrentUser } from "@/lib/auth/session";
 
 export const metadata = {
   title: "Tickets · SupportDesk",
 };
 
-export default function TicketsPage() {
+export default async function TicketsPage() {
+  const user = await getCurrentUser();
+
   // Computed once per request on the server and passed down as the initial
   // clock value for AgentWorkspace, so the first client render (hydration)
   // reuses this exact number instead of calling Date.now() again — see the
@@ -17,7 +21,7 @@ export default function TicketsPage() {
   const initialNow = Date.now();
 
   return (
-    <AppShell activeHref="/tickets">
+    <AppShell activeHref="/tickets" user={user} sidebarFooter={<UserMenu user={user} />}>
       <AgentWorkspace initialNow={initialNow} />
     </AppShell>
   );

@@ -19,7 +19,7 @@ export function TicketQueue({
 }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="flex shrink-0 items-center gap-2 border-b border-border-subtle bg-surface-card px-lg py-sm">
+      <div className="flex shrink-0 items-center gap-2 border-b border-border-subtle bg-surface-card px-space-lg py-space-sm">
         <button
           type="button"
           onClick={onToggleFilters}
@@ -48,7 +48,7 @@ export function TicketQueue({
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {tickets.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-1 p-xl text-center">
+          <div className="flex h-full flex-col items-center justify-center gap-1 p-space-xl text-center">
             <p className="text-body-md font-medium text-text-primary">No tickets match these filters</p>
             <p className="text-body-sm text-text-tertiary">Try clearing a filter or adjusting your search.</p>
           </div>

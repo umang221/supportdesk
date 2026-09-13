@@ -6,7 +6,7 @@ import { Avatar, Select } from "@/components/ui";
  */
 export function TicketAssignmentPanel({ assignee, team, agents, assigneeId, onAssigneeChange }) {
   return (
-    <div className="space-y-2 border-b border-border-subtle p-lg">
+    <div className="space-y-2 border-b border-border-subtle p-space-lg">
       <h3 className="text-label-sm font-medium text-text-secondary">Assignment</h3>
 
       <div className="flex items-center gap-2">

@@ -37,7 +37,7 @@ function FilterCheckbox({ label, checked, onChange }) {
  */
 export function TicketFilters({ filters, onFilterChange, onReset, agents, activeCount, className }) {
   return (
-    <div className={cn("flex h-full flex-col gap-5 p-lg", className)}>
+    <div className={cn("flex h-full flex-col gap-5 p-space-lg", className)}>
       <div className="flex items-center justify-between">
         <h2 className="text-label-md font-semibold text-text-primary">Filters</h2>
         {activeCount > 0 ? (

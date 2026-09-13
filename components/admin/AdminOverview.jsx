@@ -29,7 +29,7 @@ function AttentionRow({ ticket, customer, team, now }) {
   const sla = formatSlaCountdown(ticket, now);
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-surface-card p-md sm:flex-row sm:items-center sm:gap-3">
+    <div className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-surface-card p-space-md sm:flex-row sm:items-center sm:gap-3">
       <div className="min-w-0 flex-1">
         <p className="truncate text-body-sm font-medium text-text-primary">{ticket.subject}</p>
         <p className="truncate text-label-sm text-text-tertiary">
@@ -94,7 +94,7 @@ export function AdminOverview({ tickets, customersById, teamsById, teams, initia
       <div className="flex flex-col gap-2">
         <h2 className="text-label-md font-semibold text-text-primary">Needs attention</h2>
         {needsAttention.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border-subtle p-lg text-center">
+          <div className="rounded-lg border border-dashed border-border-subtle p-space-lg text-center">
             <p className="text-body-sm text-text-tertiary">Nothing at risk right now — every open ticket is within SLA.</p>
           </div>
         ) : (

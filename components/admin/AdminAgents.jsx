@@ -58,7 +58,7 @@ export function AdminAgents({ agents, teams, tickets }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border-subtle p-xl text-center">
+        <div className="rounded-lg border border-dashed border-border-subtle p-space-xl text-center">
           <p className="text-body-md font-medium text-text-primary">No agents match these filters</p>
           <p className="text-body-sm text-text-tertiary">Try a different search term or team.</p>
         </div>

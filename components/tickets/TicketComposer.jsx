@@ -23,7 +23,7 @@ export function TicketComposer({ onSubmit }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="shrink-0 border-t border-border-subtle p-lg">
+    <form onSubmit={handleSubmit} className="shrink-0 border-t border-border-subtle p-space-lg">
       <div role="tablist" aria-label="Composer mode" className="mb-2 flex gap-1">
         <button
           type="button"
@@ -31,7 +31,7 @@ export function TicketComposer({ onSubmit }) {
           aria-selected={!isNote}
           onClick={() => setMode("reply")}
           className={cn(
-            "rounded-md px-sm py-xs text-label-sm font-medium transition-colors",
+            "rounded-md px-space-sm py-space-xs text-label-sm font-medium transition-colors",
             !isNote ? "bg-accent-subtle text-primary" : "text-text-secondary hover:bg-surface-hover"
           )}
         >
@@ -43,7 +43,7 @@ export function TicketComposer({ onSubmit }) {
           aria-selected={isNote}
           onClick={() => setMode("note")}
           className={cn(
-            "flex items-center gap-1 rounded-md px-sm py-xs text-label-sm font-medium transition-colors",
+            "flex items-center gap-1 rounded-md px-space-sm py-space-xs text-label-sm font-medium transition-colors",
             isNote
               ? "bg-sla-approaching-bg text-sla-approaching-text"
               : "text-text-secondary hover:bg-surface-hover"
@@ -68,7 +68,7 @@ export function TicketComposer({ onSubmit }) {
             : "Write a reply to the customer..."
         }
         className={cn(
-          "w-full resize-none rounded-lg border p-sm text-body-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2",
+          "w-full resize-none rounded-lg border p-space-sm text-body-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2",
           isNote
             ? "border-sla-approaching-border bg-sla-approaching-bg focus:ring-sla-approaching-border"
             : "border-border-subtle bg-canvas-bg focus:border-primary focus:bg-surface-card focus:ring-accent-subtle"

@@ -13,7 +13,7 @@ export function TicketDetailHeader({ ticket, now, onStatusChange, onPriorityChan
   const sla = formatSlaCountdown(ticket, now);
 
   return (
-    <div className="shrink-0 border-b border-border-subtle p-lg">
+    <div className="shrink-0 border-b border-border-subtle p-space-lg">
       <div className="flex items-start gap-2">
         {onClose ? (
           <button

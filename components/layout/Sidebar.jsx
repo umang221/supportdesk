@@ -28,8 +28,9 @@ const NAV_VARIANTS = {
 
 /**
  * Primary application navigation rail (240px per DESIGN.md).
- * `footer` is an optional slot for a signed-in user menu — left empty until
- * auth exists rather than rendering a placeholder identity. `variant` picks
+ * `footer` is an optional slot for a signed-in user menu (see UserMenu) —
+ * omit it on unauthenticated pages rather than rendering a placeholder
+ * identity. `variant` picks
  * which nav item list to render (see NAV_VARIANTS) — a plain string so
  * Server Component pages can request the admin nav without passing the
  * icon-bearing item list itself across the server/client boundary; `items`
@@ -39,14 +40,14 @@ export function Sidebar({ items, variant = "default", activeHref, footer, classN
   const navItems = items ?? NAV_VARIANTS[variant] ?? DEFAULT_NAV_ITEMS;
   return (
     <nav aria-label="Primary" className={cn("flex h-full w-60 flex-col bg-surface-card", className)}>
-      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border-subtle px-lg">
+      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border-subtle px-space-lg">
         <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-sm font-semibold text-white">
           S
         </span>
         <span className="text-label-md font-semibold text-text-primary">SupportDesk</span>
       </div>
 
-      <ul className="flex-1 space-y-1 overflow-y-auto p-sm">
+      <ul className="flex-1 space-y-1 overflow-y-auto p-space-sm">
         {navItems.map(({ label, href, icon: Icon }) => {
           const isActive = href === activeHref;
           return (
@@ -55,7 +56,7 @@ export function Sidebar({ items, variant = "default", activeHref, footer, classN
                 href={href}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-2 rounded-md px-sm py-sm text-label-md transition-colors",
+                  "flex items-center gap-2 rounded-md px-space-sm py-space-sm text-label-md transition-colors",
                   isActive
                     ? "bg-accent-subtle text-primary"
                     : "text-text-secondary hover:bg-surface-hover hover:text-text-primary"
@@ -69,7 +70,7 @@ export function Sidebar({ items, variant = "default", activeHref, footer, classN
         })}
       </ul>
 
-      {footer ? <div className="shrink-0 border-t border-border-subtle p-sm">{footer}</div> : null}
+      {footer ? <div className="shrink-0 border-t border-border-subtle p-space-sm">{footer}</div> : null}
     </nav>
   );
 }

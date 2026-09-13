@@ -6,13 +6,14 @@ import { SearchIcon, BellIcon, HelpIcon, MenuIcon } from "@/components/ui/icons"
 
 /**
  * Top app bar: mobile nav toggle, global search, and account/notification
- * actions. `user` is optional — omit it until real auth data exists.
+ * actions. `user` is the sanitized session user from getCurrentUser(); omit
+ * it on unauthenticated pages.
  */
 export function Header({ onMenuClick, user, className }) {
   return (
     <header
       className={cn(
-        "flex h-14 shrink-0 items-center gap-3 border-b border-border-subtle bg-surface-card px-lg",
+        "flex h-14 shrink-0 items-center gap-3 border-b border-border-subtle bg-surface-card px-space-lg",
         className
       )}
     >
@@ -35,7 +36,7 @@ export function Header({ onMenuClick, user, className }) {
         />
         <span
           aria-hidden="true"
-          className="absolute right-2 rounded border border-border-subtle bg-surface-hover px-xs py-2xs text-[11px] font-medium text-text-tertiary"
+          className="absolute right-2 rounded border border-border-subtle bg-surface-hover px-space-xs py-space-2xs text-[11px] font-medium text-text-tertiary"
         >
           ⌘K
         </span>

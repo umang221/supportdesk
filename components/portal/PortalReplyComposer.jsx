@@ -19,7 +19,7 @@ export function PortalReplyComposer({ onSubmit }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-t border-border-subtle p-lg">
+    <form onSubmit={handleSubmit} className="border-t border-border-subtle p-space-lg">
       <label className="sr-only" htmlFor="portal-reply">
         Write a reply
       </label>
@@ -29,7 +29,7 @@ export function PortalReplyComposer({ onSubmit }) {
         value={body}
         onChange={(event) => setBody(event.target.value)}
         placeholder="Add a reply..."
-        className="w-full resize-none rounded-lg border border-border-subtle bg-canvas-bg p-sm text-body-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-accent-subtle"
+        className="w-full resize-none rounded-lg border border-border-subtle bg-canvas-bg p-space-sm text-body-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-accent-subtle"
       />
 
       <div className="mt-2 flex items-center justify-between">

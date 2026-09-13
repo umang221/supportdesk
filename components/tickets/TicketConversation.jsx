@@ -13,14 +13,14 @@ import { formatDateTime } from "@/lib/utils/format-datetime";
 export function TicketConversation({ messages, customer, agentsById, now }) {
   if (messages.length === 0) {
     return (
-      <p className="p-lg text-body-sm text-text-tertiary">
+      <p className="p-space-lg text-body-sm text-text-tertiary">
         No messages yet on this ticket.
       </p>
     );
   }
 
   return (
-    <ol className="flex flex-col gap-4 p-lg">
+    <ol className="flex flex-col gap-4 p-space-lg">
       {messages.map((message) => {
         const isAgent = message.authorType === "agent";
         const isInternal = Boolean(message.isInternal);
@@ -31,7 +31,7 @@ export function TicketConversation({ messages, customer, agentsById, now }) {
             <Avatar name={authorName} size="sm" className="mt-0.5 shrink-0" />
             <div
               className={cn(
-                "min-w-0 flex-1 rounded-lg border p-md",
+                "min-w-0 flex-1 rounded-lg border p-space-md",
                 isInternal
                   ? "border-sla-approaching-border bg-sla-approaching-bg"
                   : isAgent
