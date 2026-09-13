@@ -2,11 +2,14 @@ import { connectDB } from "@/server/utils/db";
 import Ticket from "@/server/models/Ticket";
 import Customer from "@/server/models/Customer";
 import Team from "@/server/models/Team";
+import User from "@/server/models/User";
 import { STATUSES } from "@/lib/constants/statuses";
 import { PRIORITIES } from "@/lib/constants/priorities";
 import { HttpError } from "@/server/utils/http-error";
+import { hasRole } from "@/lib/auth/authorization";
 import { assertValidStatusTransition } from "@/server/services/ticketStateMachine";
 import { isValidObjectId } from "@/server/validators/ticketValidators";
+import { computeInitialSla, recalcSlaOnPriorityChange, recalcSlaOnStatusChange, getLiveSlaState } from "@/server/services/slaService";
 
 const TICKET_NUMBER_PREFIX = "TCK-";
 const MAX_TICKET_NUMBER_ATTEMPTS = 5;
@@ -20,6 +23,18 @@ function populateTicketRefs(query) {
     .populate("customer", "name email company")
     .populate("team", "name")
     .populate("assignee", "name email");
+}
+
+/**
+ * Converts a Ticket document into the plain object returned to clients,
+ * overlaying the live (recomputed, not persisted) SLA state — see
+ * getLiveSlaState for why this isn't just read from the stored field.
+ */
+function presentTicket(ticketDoc, now = new Date()) {
+  if (!ticketDoc) return null;
+  const ticket = ticketDoc.toObject();
+  ticket.slaState = getLiveSlaState(ticket, now);
+  return ticket;
 }
 
 /** Lists tickets with optional exact-match filters and pagination. */
@@ -46,19 +61,27 @@ export async function listTickets(rawQuery = {}) {
   const page = Math.max(1, Number.parseInt(rawQuery.page, 10) || 1);
   const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, Number.parseInt(rawQuery.limit, 10) || DEFAULT_PAGE_SIZE));
 
+  const now = new Date();
   const [tickets, total] = await Promise.all([
     populateTicketRefs(Ticket.find(filter).sort({ updatedAt: -1 }).skip((page - 1) * limit).limit(limit)),
     Ticket.countDocuments(filter),
   ]);
 
-  return { tickets, page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) };
+  return {
+    tickets: tickets.map((ticket) => presentTicket(ticket, now)),
+    page,
+    limit,
+    total,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+  };
 }
 
 /** Fetches one ticket by id. Returns null if the id is malformed or not found. */
 export async function getTicketById(id) {
   if (!isValidObjectId(id)) return null;
   await connectDB();
-  return populateTicketRefs(Ticket.findById(id));
+  const ticket = await populateTicketRefs(Ticket.findById(id));
+  return presentTicket(ticket);
 }
 
 async function generateTicketNumber() {
@@ -94,6 +117,9 @@ export async function createTicket(input) {
     throw new HttpError(400, "Team not found.", { code: "validation_error", fieldErrors: { team: "No team with this id exists." } });
   }
 
+  const createdAt = new Date();
+  const { dueAt, slaState } = computeInitialSla(input.priority, createdAt);
+
   for (let attempt = 0; attempt < MAX_TICKET_NUMBER_ATTEMPTS; attempt += 1) {
     const ticketNumber = await generateTicketNumber();
     try {
@@ -104,8 +130,10 @@ export async function createTicket(input) {
         team: input.team,
         priority: input.priority,
         channel: input.channel,
+        dueAt,
+        slaState,
       });
-      return populateTicketRefs(Ticket.findById(ticket._id));
+      return presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)));
     } catch (error) {
       const isDuplicateTicketNumber = error?.code === 11000 && "ticketNumber" in (error?.keyPattern ?? {});
       if (!isDuplicateTicketNumber || attempt === MAX_TICKET_NUMBER_ATTEMPTS - 1) throw error;
@@ -127,10 +155,19 @@ export async function updateTicket(id, patch) {
     }
   }
 
+  const update = { ...patch };
+  if (patch.priority) {
+    const existing = await Ticket.findById(id).select("createdAt priority");
+    if (!existing) return null;
+    const { dueAt, slaState } = recalcSlaOnPriorityChange(existing, patch.priority);
+    update.dueAt = dueAt;
+    update.slaState = slaState;
+  }
+
   const ticket = await populateTicketRefs(
-    Ticket.findByIdAndUpdate(id, { $set: patch }, { new: true, runValidators: true })
+    Ticket.findByIdAndUpdate(id, { $set: update }, { new: true, runValidators: true })
   );
-  return ticket;
+  return presentTicket(ticket);
 }
 
 /**
@@ -147,7 +184,50 @@ export async function transitionTicketStatus(id, nextStatus) {
 
   assertValidStatusTransition(ticket.status, nextStatus);
 
+  const now = new Date();
+  const { slaState } = recalcSlaOnStatusChange(ticket, nextStatus, now);
   ticket.status = nextStatus;
+  ticket.slaState = slaState;
   await ticket.save();
-  return populateTicketRefs(Ticket.findById(ticket._id));
+  return presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)), now);
+}
+
+/**
+ * Assigns (or unassigns, when assigneeId is null) a ticket to a user.
+ * Authorization is enforced here (not just in the route) so the rule can
+ * never be bypassed by another caller: team leads/admins may assign to
+ * anyone, agents may only assign a ticket to themselves and may not
+ * unassign. Returns null if the ticket doesn't exist.
+ */
+export async function assignTicket(id, { assigneeId, actingUser }) {
+  if (!isValidObjectId(id)) return null;
+  await connectDB();
+
+  const ticket = await Ticket.findById(id);
+  if (!ticket) return null;
+
+  const isPrivileged = hasRole(actingUser, ["team_lead", "admin"]);
+
+  if (assigneeId === null) {
+    if (!isPrivileged) {
+      throw new HttpError(403, "Only a team lead or admin can unassign a ticket.", { code: "forbidden" });
+    }
+  } else {
+    const isSelfAssign = String(assigneeId) === String(actingUser.id);
+    if (!isPrivileged && !isSelfAssign) {
+      throw new HttpError(403, "Agents may only assign tickets to themselves.", { code: "forbidden" });
+    }
+
+    const assignee = await User.findById(assigneeId).select("isActive");
+    if (!assignee || !assignee.isActive) {
+      throw new HttpError(400, "Assignee not found or inactive.", {
+        code: "validation_error",
+        fieldErrors: { assigneeId: "Must reference an active user." },
+      });
+    }
+  }
+
+  ticket.assignee = assigneeId;
+  await ticket.save();
+  return presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)));
 }

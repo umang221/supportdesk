@@ -9,9 +9,11 @@ const STATUS_VALUES = Object.values(STATUSES);
 
 // Fields a client may set through the generic update endpoint. Everything
 // else on the Ticket model — customer (reference, set once at creation),
-// ticketNumber/slaState (server-generated), assignee (assignment isn't
-// implemented yet), status (must go through the state-machine-guarded
-// status endpoint), createdAt/updatedAt (audit) — is protected.
+// ticketNumber/dueAt/slaState (server-generated/calculated), assignee
+// (must go through the dedicated assign endpoint so the assignment
+// authorization rules can't be bypassed), status (must go through the
+// state-machine-guarded status endpoint), createdAt/updatedAt (audit) — is
+// protected.
 const UPDATABLE_FIELDS = ["subject", "team", "priority", "channel"];
 
 function isValidObjectId(value) {
@@ -133,6 +135,23 @@ export function validateStatusInput(data) {
     );
   }
   return status;
+}
+
+/**
+ * Validates POST /api/tickets/:id/assign input. `assigneeId` must be either
+ * a well-formed ObjectId (assign) or explicit `null` (unassign) — omitting
+ * it entirely is rejected so a caller can't send an empty body by mistake
+ * and have it silently do nothing.
+ */
+export function validateAssignInput(data) {
+  const assigneeId = data?.assigneeId;
+  if (assigneeId === null) return { assigneeId: null };
+  if (isValidObjectId(assigneeId)) return { assigneeId };
+
+  throw new HttpError(400, "assigneeId must be a valid user id, or null to unassign.", {
+    code: "validation_error",
+    fieldErrors: { assigneeId: "Must be a valid user id or null." },
+  });
 }
 
 export { isValidObjectId };
