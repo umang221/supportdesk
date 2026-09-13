@@ -33,20 +33,26 @@
   --color-error-container: #ffdad6;
   --color-on-error-container: #93000a;
 
-  /* SLA status */
+  /* SLA status (marker/dot colors) */
   --color-sla-healthy: #10b981;
   --color-sla-healthy-bg: #ecfdf5;
   --color-sla-healthy-border: #a7f3d0;
+  --color-sla-healthy-text: #047857;
   --color-sla-approaching: #f59e0b;
   --color-sla-approaching-bg: #fffbeb;
   --color-sla-approaching-border: #fde68a;
+  --color-sla-approaching-text: #b45309;
   --color-sla-critical: #ef4444;
   --color-sla-critical-bg: #fef2f2;
   --color-sla-critical-border: #fecaca;
+  --color-sla-critical-text: #b91c1c;
 
-  /* Neutral badges */
+  /* Neutral / open status badges */
   --color-badge-neutral-bg: #f1f5f9;
   --color-badge-neutral-text: #475569;
+  --color-status-open-bg: #eff6ff;
+  --color-status-open-text: #1d4ed8;
+  --color-status-open-border: #bfdbfe;
 
   /* Typography scale */
   --text-display-lg: 30px;
