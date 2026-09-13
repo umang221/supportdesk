@@ -1,6 +1,6 @@
-import { requireUser } from "@/lib/auth/session";
+import { requireRole } from "@/lib/auth/authorization";
 
 export default async function AdminLayout({ children }) {
-  await requireUser();
+  await requireRole(["admin"]);
   return children;
 }

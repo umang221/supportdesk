@@ -33,7 +33,7 @@ export function AppShell({ activeHref, user, sidebarFooter, navVariant, children
   return (
     <div className="flex h-dvh bg-canvas-bg">
       <div className="hidden border-r border-border-subtle lg:block">
-        <Sidebar activeHref={activeHref} footer={sidebarFooter} variant={navVariant} />
+        <Sidebar activeHref={activeHref} footer={sidebarFooter} variant={navVariant} role={user?.role} />
       </div>
 
       {isMobileNavOpen ? (
@@ -57,7 +57,7 @@ export function AppShell({ activeHref, user, sidebarFooter, navVariant, children
             >
               <CloseIcon className="h-5 w-5" />
             </button>
-            <Sidebar activeHref={activeHref} footer={sidebarFooter} variant={navVariant} />
+            <Sidebar activeHref={activeHref} footer={sidebarFooter} variant={navVariant} role={user?.role} />
           </div>
         </div>
       ) : null}

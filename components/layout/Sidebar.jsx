@@ -19,6 +19,9 @@ export const DEFAULT_NAV_ITEMS = [
   { label: "Analytics", href: "/analytics", icon: AnalyticsIcon },
   { label: "Team", href: "/team", icon: TeamIcon },
   { label: "Settings", href: "/settings", icon: SettingsIcon },
+  // UI-level convenience only — /admin/* is still enforced server-side by
+  // requireRole in app/admin/layout.js regardless of whether this is shown.
+  { label: "Admin", href: "/admin", icon: TeamIcon, roles: ["admin"] },
 ];
 
 const NAV_VARIANTS = {
@@ -34,10 +37,14 @@ const NAV_VARIANTS = {
  * which nav item list to render (see NAV_VARIANTS) — a plain string so
  * Server Component pages can request the admin nav without passing the
  * icon-bearing item list itself across the server/client boundary; `items`
- * still wins if explicitly provided.
+ * still wins if explicitly provided. `role` filters out items with a
+ * `roles` allowlist the current user doesn't have — purely cosmetic (the
+ * actual access control lives server-side, see requireRole).
  */
-export function Sidebar({ items, variant = "default", activeHref, footer, className }) {
-  const navItems = items ?? NAV_VARIANTS[variant] ?? DEFAULT_NAV_ITEMS;
+export function Sidebar({ items, variant = "default", activeHref, footer, role, className }) {
+  const navItems = (items ?? NAV_VARIANTS[variant] ?? DEFAULT_NAV_ITEMS).filter(
+    (item) => !item.roles || item.roles.includes(role)
+  );
   return (
     <nav aria-label="Primary" className={cn("flex h-full w-60 flex-col bg-surface-card", className)}>
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border-subtle px-space-lg">
