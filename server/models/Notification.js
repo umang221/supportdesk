@@ -12,6 +12,9 @@ export const NOTIFICATION_TYPES = [
 
 const notificationSchema = new mongoose.Schema(
   {
+    // Stable id from the seed source data, used to upsert idempotently since
+    // notifications have no other natural unique key.
+    legacyId: { type: String, unique: true, sparse: true },
     type: { type: String, enum: NOTIFICATION_TYPES, required: true },
     message: { type: String, required: true, trim: true },
     relatedTicket: { type: mongoose.Schema.Types.ObjectId, ref: "Ticket" },
