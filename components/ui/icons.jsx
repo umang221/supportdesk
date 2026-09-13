@@ -139,3 +139,29 @@ export function CloseIcon(props) {
     </IconBase>
   );
 }
+
+export function ChevronLeftIcon(props) {
+  return (
+    <IconBase {...props}>
+      <path d="M15 5.5 8.5 12l6.5 6.5" />
+    </IconBase>
+  );
+}
+
+export function SendIcon(props) {
+  return (
+    <IconBase {...props}>
+      <path d="M4 12 20 4l-6.5 16-2.7-6.8L4 12Z" />
+    </IconBase>
+  );
+}
+
+export function FilterIcon(props) {
+  return (
+    <IconBase {...props}>
+      <path d="M4 5.5h16" />
+      <path d="M7.5 12h9" />
+      <path d="M10.5 18.5h3" />
+    </IconBase>
+  );
+}
