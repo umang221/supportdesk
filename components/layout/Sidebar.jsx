@@ -9,6 +9,7 @@ import {
   TeamIcon,
   SettingsIcon,
 } from "@/components/ui/icons";
+import { ADMIN_NAV_ITEMS } from "@/lib/admin/nav-items";
 
 export const DEFAULT_NAV_ITEMS = [
   { label: "Home", href: "/", icon: HomeIcon },
@@ -20,12 +21,22 @@ export const DEFAULT_NAV_ITEMS = [
   { label: "Settings", href: "/settings", icon: SettingsIcon },
 ];
 
+const NAV_VARIANTS = {
+  default: DEFAULT_NAV_ITEMS,
+  admin: ADMIN_NAV_ITEMS,
+};
+
 /**
  * Primary application navigation rail (240px per DESIGN.md).
  * `footer` is an optional slot for a signed-in user menu — left empty until
- * auth exists rather than rendering a placeholder identity.
+ * auth exists rather than rendering a placeholder identity. `variant` picks
+ * which nav item list to render (see NAV_VARIANTS) — a plain string so
+ * Server Component pages can request the admin nav without passing the
+ * icon-bearing item list itself across the server/client boundary; `items`
+ * still wins if explicitly provided.
  */
-export function Sidebar({ items = DEFAULT_NAV_ITEMS, activeHref, footer, className }) {
+export function Sidebar({ items, variant = "default", activeHref, footer, className }) {
+  const navItems = items ?? NAV_VARIANTS[variant] ?? DEFAULT_NAV_ITEMS;
   return (
     <nav aria-label="Primary" className={cn("flex h-full w-60 flex-col bg-surface-card", className)}>
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border-subtle px-lg">
@@ -36,7 +47,7 @@ export function Sidebar({ items = DEFAULT_NAV_ITEMS, activeHref, footer, classNa
       </div>
 
       <ul className="flex-1 space-y-1 overflow-y-auto p-sm">
-        {items.map(({ label, href, icon: Icon }) => {
+        {navItems.map(({ label, href, icon: Icon }) => {
           const isActive = href === activeHref;
           return (
             <li key={href}>

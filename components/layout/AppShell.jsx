@@ -9,9 +9,14 @@ import { CloseIcon } from "@/components/ui/icons";
  * Overall page frame: fixed sidebar + header on desktop, collapsing to an
  * off-canvas drawer below the `lg` breakpoint (DESIGN.md §Layout & Spacing).
  * `activeHref`/`user`/`sidebarFooter` are passed straight through to the
- * nav/header primitives; omit `user` until real auth data exists.
+ * nav/header primitives; omit `user` until real auth data exists. `navVariant`
+ * lets a section (e.g. the admin area) swap in a different nav list instead
+ * of Sidebar's default — passed as a plain string (not the icon-bearing item
+ * list itself) since that list contains component references, and those
+ * can't cross the server/client boundary from a Server Component page into
+ * this Client Component; Sidebar resolves the actual items client-side.
  */
-export function AppShell({ activeHref, user, sidebarFooter, children }) {
+export function AppShell({ activeHref, user, sidebarFooter, navVariant, children }) {
   const [isMobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
@@ -28,7 +33,7 @@ export function AppShell({ activeHref, user, sidebarFooter, children }) {
   return (
     <div className="flex h-dvh bg-canvas-bg">
       <div className="hidden border-r border-border-subtle lg:block">
-        <Sidebar activeHref={activeHref} footer={sidebarFooter} />
+        <Sidebar activeHref={activeHref} footer={sidebarFooter} variant={navVariant} />
       </div>
 
       {isMobileNavOpen ? (
@@ -52,7 +57,7 @@ export function AppShell({ activeHref, user, sidebarFooter, children }) {
             >
               <CloseIcon className="h-5 w-5" />
             </button>
-            <Sidebar activeHref={activeHref} footer={sidebarFooter} />
+            <Sidebar activeHref={activeHref} footer={sidebarFooter} variant={navVariant} />
           </div>
         </div>
       ) : null}
