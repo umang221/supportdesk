@@ -45,11 +45,22 @@ export function AgentWorkspace({ initialNow }) {
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [now, setNow] = useState(initialNow);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  // Session-only edits, never persisted: { [ticketId]: { status?, priority?, assigneeId? } }
+  const [ticketOverrides, setTicketOverrides] = useState({});
+  // Session-only composed messages, never persisted: { [ticketId]: Message[] }
+  const [draftMessagesByTicket, setDraftMessagesByTicket] = useState({});
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), CLOCK_TICK_MS);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    if (!isDetailLoading) return undefined;
+    const timeout = setTimeout(() => setIsDetailLoading(false), 300);
+    return () => clearTimeout(timeout);
+  }, [isDetailLoading, selectedTicketId]);
 
   const customersById = useMemo(() => new Map(customers.map((c) => [c.id, c])), []);
   const agentsById = useMemo(() => new Map(agents.map((a) => [a.id, a])), []);
@@ -79,7 +90,15 @@ export function AgentWorkspace({ initialNow }) {
     ? filteredTickets.find((t) => t.id === selectedTicketId) ?? tickets.find((t) => t.id === selectedTicketId)
     : null;
 
+  // Merge in any session-only status/priority/assignee edits for the
+  // selected ticket. Reassigning doesn't recompute SLA fields — there's no
+  // real SLA engine yet, so slaState/dueAt stay as the mock data defines them.
+  const effectiveTicket = selectedTicket
+    ? { ...selectedTicket, ...ticketOverrides[selectedTicket.id] }
+    : null;
+
   function handleSelectTicket(ticketId) {
+    if (ticketId !== selectedTicketId) setIsDetailLoading(true);
     setSelectedTicketId(ticketId);
     setMobileDetailOpen(true);
   }
@@ -92,13 +111,31 @@ export function AgentWorkspace({ initialNow }) {
     setFilters(INITIAL_FILTERS);
   }
 
-  const detailProps = selectedTicket
+  function handleTicketFieldChange(ticketId, patch) {
+    setTicketOverrides((prev) => ({ ...prev, [ticketId]: { ...prev[ticketId], ...patch } }));
+  }
+
+  function handleAddMessage(ticketId, message) {
+    setDraftMessagesByTicket((prev) => ({
+      ...prev,
+      [ticketId]: [...(prev[ticketId] ?? []), message],
+    }));
+  }
+
+  const detailProps = effectiveTicket
     ? {
-        ticket: selectedTicket,
-        customer: customersById.get(selectedTicket.customerId),
-        assignee: selectedTicket.assigneeId ? agentsById.get(selectedTicket.assigneeId) : null,
-        messages: getMessagesByTicketId(selectedTicket.id),
+        ticket: effectiveTicket,
+        customer: customersById.get(effectiveTicket.customerId),
+        assignee: effectiveTicket.assigneeId ? agentsById.get(effectiveTicket.assigneeId) : null,
+        messages: [
+          ...getMessagesByTicketId(effectiveTicket.id),
+          ...(draftMessagesByTicket[effectiveTicket.id] ?? []),
+        ],
         agentsById,
+        onStatusChange: (status) => handleTicketFieldChange(effectiveTicket.id, { status }),
+        onPriorityChange: (priority) => handleTicketFieldChange(effectiveTicket.id, { priority }),
+        onAssigneeChange: (assigneeId) => handleTicketFieldChange(effectiveTicket.id, { assigneeId }),
+        onAddMessage: (message) => handleAddMessage(effectiveTicket.id, message),
       }
     : { ticket: null };
 
@@ -129,12 +166,17 @@ export function AgentWorkspace({ initialNow }) {
             now={now}
           />
         }
-        right={<TicketDetail {...detailProps} now={now} />}
+        right={<TicketDetail {...detailProps} now={now} isLoading={isDetailLoading} />}
       />
 
       {mobileDetailOpen ? (
         <div className="fixed inset-0 z-30 bg-surface-card xl:hidden">
-          <TicketDetail {...detailProps} now={now} onClose={() => setMobileDetailOpen(false)} />
+          <TicketDetail
+            {...detailProps}
+            now={now}
+            isLoading={isDetailLoading}
+            onClose={() => setMobileDetailOpen(false)}
+          />
         </div>
       ) : null}
 

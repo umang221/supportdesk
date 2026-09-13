@@ -1,8 +1,15 @@
 import { cn } from "@/lib/utils/cn";
 import { Avatar } from "@/components/ui/Avatar";
 import { formatRelativeTime } from "@/lib/utils/format-relative-time";
+import { formatDateTime } from "@/lib/utils/format-datetime";
 
-/** Message thread for the selected ticket, oldest first. */
+/**
+ * Message thread for the selected ticket, oldest first. Customer replies,
+ * agent replies, and internal notes (`message.isInternal`) are styled
+ * distinctly so it's never ambiguous what the customer will actually see.
+ * `message.authorName` overrides the agentsById/customer lookup for
+ * locally-composed drafts (see AgentWorkspace) that aren't in the mock data.
+ */
 export function TicketConversation({ messages, customer, agentsById, now }) {
   if (messages.length === 0) {
     return (
@@ -16,22 +23,39 @@ export function TicketConversation({ messages, customer, agentsById, now }) {
     <ol className="flex flex-col gap-4 p-lg">
       {messages.map((message) => {
         const isAgent = message.authorType === "agent";
-        const authorName = isAgent ? agentsById.get(message.authorId)?.name : customer?.name;
+        const isInternal = Boolean(message.isInternal);
+        const authorName = message.authorName ?? (isAgent ? agentsById.get(message.authorId)?.name : customer?.name);
 
         return (
           <li key={message.id} className="flex gap-3">
             <Avatar name={authorName} size="sm" className="mt-0.5 shrink-0" />
-            <div className={cn("min-w-0 flex-1 rounded-lg border p-md", isAgent ? "border-accent-subtle bg-accent-subtle" : "border-border-subtle bg-surface-card")}>
+            <div
+              className={cn(
+                "min-w-0 flex-1 rounded-lg border p-md",
+                isInternal
+                  ? "border-sla-approaching-border bg-sla-approaching-bg"
+                  : isAgent
+                    ? "border-accent-subtle bg-accent-subtle"
+                    : "border-border-subtle bg-surface-card"
+              )}
+            >
               <div className="mb-1 flex items-center justify-between gap-2">
                 <span className="truncate text-label-sm font-medium text-text-primary">
                   {authorName ?? "Unknown"}
-                  {isAgent ? (
+                  {isInternal ? (
+                    <span className="ml-1.5 rounded bg-sla-approaching-text/10 px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-sla-approaching-text">
+                      Internal note
+                    </span>
+                  ) : isAgent ? (
                     <span className="ml-1.5 rounded bg-primary/10 px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-primary">
                       Agent
                     </span>
                   ) : null}
                 </span>
-                <span className="shrink-0 text-label-sm text-text-tertiary">
+                <span
+                  className="shrink-0 text-label-sm text-text-tertiary"
+                  title={formatDateTime(message.createdAt)}
+                >
                   {formatRelativeTime(message.createdAt, now)}
                 </span>
               </div>

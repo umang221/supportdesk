@@ -165,3 +165,20 @@ export function FilterIcon(props) {
     </IconBase>
   );
 }
+
+export function PaperclipIcon(props) {
+  return (
+    <IconBase {...props}>
+      <path d="M8 12.5 15 5.5a3 3 0 0 1 4.2 4.2l-8 8a4.5 4.5 0 1 1-6.4-6.4l7.3-7.3" />
+    </IconBase>
+  );
+}
+
+export function NoteIcon(props) {
+  return (
+    <IconBase {...props}>
+      <rect x="5" y="10.5" width="14" height="9.5" rx="1.5" />
+      <path d="M8.5 10.5V7a3.5 3.5 0 0 1 7 0v3.5" />
+    </IconBase>
+  );
+}
