@@ -1,0 +1,1626 @@
+================================================================================
+SUPPORTDESK — MASTER PROJECT CONTEXT
+================================================================================
+
+DOCUMENT PURPOSE
+
+This document is the single source of truth for the SupportDesk project.
+
+Claude Code must read and understand this document before making substantial
+changes to the project.
+
+Do not repeatedly ask the user to explain information already contained here.
+
+This is a portfolio project. The objective is not merely to produce working code.
+The objective is to build a realistic, polished, maintainable customer-support
+and SLA-management SaaS while helping the developer understand the engineering
+concepts behind the system.
+
+The developer is comfortable with JavaScript but does NOT have strong TypeScript
+knowledge.
+
+Therefore:
+
+IMPORTANT:
+- Use JavaScript, NOT TypeScript.
+- Use .js and .jsx files.
+- Do not introduce .ts or .tsx files.
+- Do not convert the project to TypeScript.
+- Explain important architectural and security decisions in beginner-friendly
+  language.
+- The developer should understand the system rather than blindly accepting
+  generated code.
+
+================================================================================
+1. PRODUCT OVERVIEW
+================================================================================
+
+Product name:
+
+SupportDesk
+
+SupportDesk is a modern customer-support platform for companies to manage:
+
+- Customer support tickets
+- Conversations
+- Support agents
+- Teams
+- Ticket assignment
+- Priorities
+- Statuses
+- SLA policies
+- SLA deadlines
+- SLA breach monitoring
+- Notifications
+- Knowledge-base articles
+- Attachments
+- Customer information
+- Internal notes
+- Analytics
+- AI-assisted ticket operations
+- Audit history
+
+The application should feel like a real B2B SaaS product rather than a
+tutorial project.
+
+The project is intended to be shown to recruiters and discussed in technical
+interviews.
+
+================================================================================
+2. PRIMARY PRODUCT GOAL
+================================================================================
+
+The product should help support teams answer three questions quickly:
+
+1. What needs attention?
+2. Why does it matter?
+3. What should I do next?
+
+The main experience should therefore prioritize:
+
+- Ticket visibility
+- Conversation clarity
+- Assignment
+- Priority
+- SLA health
+- Customer context
+- Fast agent actions
+- Search and filtering
+- Operational visibility
+
+Do NOT design the product like a generic analytics dashboard.
+
+The Agent Workspace is the core product experience.
+
+================================================================================
+3. TARGET USERS
+================================================================================
+
+CUSTOMER
+
+Can:
+
+- Create tickets
+- View their tickets
+- View ticket status
+- Reply to conversations
+- Upload attachments
+- Search knowledge-base articles
+- Receive notifications
+
+SUPPORT AGENT
+
+Can:
+
+- View assigned tickets
+- View team tickets
+- Claim/unassign tickets
+- Reply to customers
+- Add internal notes
+- Change status
+- Change priority
+- Change assignment
+- View customer context
+- View SLA state
+- Search tickets
+- Use AI assistance
+- Access knowledge base
+
+TEAM LEAD / MANAGER
+
+Can:
+
+- View team workload
+- Monitor SLA performance
+- View ticket metrics
+- Reassign tickets
+- Monitor agents
+- View operational analytics
+
+ADMIN
+
+Can:
+
+- Manage users
+- Manage teams
+- Manage roles
+- Manage SLA policies
+- Manage knowledge-base content
+- Manage system configuration
+- View audit logs
+- View system-level analytics
+
+================================================================================
+4. CORE PRODUCT PRINCIPLES
+================================================================================
+
+1. Clarity over decoration.
+
+2. Speed over visual gimmicks.
+
+3. Information hierarchy must be obvious.
+
+4. The interface should feel like mature enterprise software.
+
+5. Important information should be visible without excessive clicking.
+
+6. Actions should be predictable.
+
+7. Error states must be handled properly.
+
+8. Empty states must be intentional.
+
+9. Loading states must be intentional.
+
+10. Responsive behavior must be considered.
+
+11. Accessibility should be considered from the beginning.
+
+12. Security is a first-class requirement.
+
+13. Business rules belong on the server, not only in the frontend.
+
+14. Never trust client-supplied permissions.
+
+15. Avoid unnecessary complexity.
+
+================================================================================
+5. DESIGN DIRECTION
+================================================================================
+
+OVERALL STYLE:
+
+"Quietly premium enterprise software."
+
+The visual language should combine:
+
+- Discipline similar to Linear
+- Conversation-oriented UX similar to Intercom
+- Structured ticket management similar to Zendesk
+
+Do NOT directly copy these products.
+
+Use them as inspiration for information architecture and interaction quality.
+
+The application should look original.
+
+AVOID:
+
+- Generic AI-dashboard aesthetics
+- Excessive gradients
+- Purple/blue AI gradients
+- Glowing cards
+- Glassmorphism
+- Excessive shadows
+- Huge rounded cards
+- rounded-3xl everywhere
+- Excessive pill-shaped UI
+- Decorative fake charts
+- Excessive floating panels
+- Excessive badges
+- Unnecessary animations
+- Marketing-landing-page aesthetics inside the product
+
+PREFERRED:
+
+- Neutral/off-white background
+- White surfaces
+- Charcoal/dark text
+- Muted gray secondary text
+- One sophisticated accent color
+- Red/orange only where urgency requires it
+- Green for successful/resolved states
+- Subtle 1px borders
+- Moderate radius approximately 6–10px
+- Strong typography
+- Dense but readable information
+- Consistent spacing
+- Clear hierarchy
+
+Recommended fonts:
+
+- Geist
+OR
+- Inter
+
+Do not introduce multiple competing font systems.
+
+================================================================================
+6. DESIGN WORKFLOW
+================================================================================
+
+The UI should be designed before large-scale implementation.
+
+Claude Design should be used to explore and refine the visual direction.
+
+The developer should establish:
+
+1. Design system
+2. Agent Workspace
+3. Ticket Detail
+4. Customer Portal
+5. Admin/Analytics
+
+Individual designs are NOT required for every single page.
+
+Instead, the above screens establish the visual language.
+
+Pages without individual designs should inherit:
+
+- Typography
+- Spacing
+- Colors
+- Components
+- Navigation
+- Borders
+- Radius
+- Interaction patterns
+- Density
+- Information hierarchy
+
+If screenshots/design references are provided to Claude Code, treat them as the
+visual source of truth.
+
+Do not replace approved designs with a generic AI-generated dashboard.
+
+If no design exists for a specific screen, infer the design from the approved
+design system and existing approved screens.
+
+================================================================================
+7. CORE AGENT WORKSPACE
+================================================================================
+
+The Agent Workspace should be the strongest screen in the application.
+
+Preferred structure:
+
+THREE-COLUMN WORKSPACE
+
+LEFT:
+
+- Main navigation
+- Inbox
+- Assigned
+- Unassigned
+- Urgent
+- My Tickets
+- Team
+- SLA Risk
+- Knowledge
+- Analytics
+- Settings
+
+CENTER:
+
+- Ticket queue
+- Search
+- Filters
+- Sorting
+- Ticket rows
+- Customer name
+- Ticket subject
+- Priority
+- Status
+- Assignee
+- SLA indicator
+- Updated time
+
+RIGHT:
+
+- Ticket conversation
+- Customer information
+- Ticket metadata
+- Assignment
+- Status
+- Priority
+- SLA
+- Internal notes
+- Reply composer
+- Attachments
+- Ticket actions
+
+The workspace should feel dense and productive.
+
+================================================================================
+8. SLA VISUAL LANGUAGE
+================================================================================
+
+SLA should be treated as a core visual language.
+
+Prefer subtle indicators such as:
+
+Healthy:
+● 3h 21m
+
+Approaching:
+● 18m
+
+Critical:
+● 04m
+
+Breached:
+● 12m overdue
+
+Avoid making SLA into giant decorative cards.
+
+SLA state should be visible inside ticket lists and ticket details.
+
+Possible SLA states:
+
+- healthy
+- approaching
+- critical
+- breached
+- paused
+- completed
+
+================================================================================
+9. MAIN APPLICATION SCREENS
+================================================================================
+
+AUTHENTICATION
+
+- Login
+- Registration if required
+- Password reset
+- Session handling
+
+CUSTOMER
+
+- Customer dashboard
+- My tickets
+- Create ticket
+- Ticket detail
+- Knowledge base
+- Notifications
+- Profile/settings
+
+AGENT
+
+- Agent workspace
+- Ticket detail
+- My tickets
+- Team queue
+- Unassigned queue
+- SLA risk queue
+- Knowledge base
+- Notifications
+- Profile/settings
+
+ADMIN / MANAGEMENT
+
+- Admin dashboard
+- Team management
+- User management
+- SLA policies
+- Knowledge base management
+- Audit logs
+- Analytics
+- System settings
+
+Do not create unnecessary pages just to increase the page count.
+
+================================================================================
+10. TECHNOLOGY STACK
+================================================================================
+
+FRONTEND:
+
+- Next.js
+- React
+- JavaScript
+- JSX
+- Tailwind CSS
+- TanStack Query
+- React Hook Form
+- Zod
+
+BACKEND:
+
+- Node.js
+- Express
+- JavaScript
+
+DATABASE:
+
+- MongoDB
+- Mongoose
+
+AUTHENTICATION:
+
+- Secure HTTP-only cookies
+- Server-side session/token verification
+- Password hashing
+
+REALTIME:
+
+- Socket.IO
+
+BACKGROUND JOBS:
+
+- Redis
+- BullMQ
+
+STORAGE:
+
+- S3-compatible storage
+OR
+- Cloudinary
+
+EMAIL:
+
+Use an email provider abstraction.
+
+AI:
+
+Use an AI provider abstraction.
+
+TESTING:
+
+- Unit tests
+- API tests
+- End-to-end tests
+
+Possible tools:
+
+- Vitest or Jest
+- Supertest
+- Playwright
+
+INFRASTRUCTURE:
+
+- Docker
+- Docker Compose
+
+CI/CD:
+
+Use GitHub Actions if appropriate.
+
+================================================================================
+11. JAVASCRIPT-ONLY RULE
+================================================================================
+
+ABSOLUTE RULE:
+
+Do not introduce TypeScript.
+
+Allowed:
+
+.js
+.jsx
+
+Not allowed:
+
+.ts
+.tsx
+
+Avoid unnecessary advanced JavaScript patterns.
+
+Prefer readable code.
+
+Use JSDoc only when useful.
+
+Use Zod for runtime validation.
+
+The developer should be able to read and understand the implementation.
+
+================================================================================
+12. PREFERRED REPOSITORY STRUCTURE
+================================================================================
+
+Use a structure similar to:
+
+supportdesk/
+│
+├── app/
+│   ├── (auth)/
+│   ├── customer/
+│   ├── agent/
+│   ├── admin/
+│   ├── api/
+│   ├── layout.js
+│   └── page.js
+│
+├── components/
+│   ├── ui/
+│   ├── layout/
+│   ├── tickets/
+│   ├── conversations/
+│   ├── sla/
+│   ├── customers/
+│   ├── analytics/
+│   └── forms/
+│
+├── lib/
+│   ├── api/
+│   ├── auth/
+│   ├── validation/
+│   ├── utils/
+│   └── constants/
+│
+├── server/
+│   ├── controllers/
+│   ├── services/
+│   ├── middleware/
+│   ├── routes/
+│   ├── models/
+│   ├── jobs/
+│   ├── workers/
+│   └── utils/
+│
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── e2e/
+│
+├── public/
+│
+├── scripts/
+│
+├── docker/
+│
+├── .env.example
+├── CLAUDE.md
+├── SUPPORTDESK_PROJECT_CONTEXT.txt
+├── README.md
+├── package.json
+└── docker-compose.yml
+
+The exact structure can evolve if there is a strong technical reason.
+
+Do not reorganize the entire repository without approval.
+
+================================================================================
+13. DATA MODELS
+================================================================================
+
+USER
+
+Fields should include concepts such as:
+
+- name
+- email
+- passwordHash
+- role
+- team
+- avatar
+- status
+- createdAt
+- updatedAt
+
+Roles:
+
+- customer
+- agent
+- manager
+- admin
+
+TEAM
+
+- name
+- description
+- members
+- createdAt
+- updatedAt
+
+CUSTOMER
+
+- user reference if applicable
+- name
+- email
+- company
+- metadata
+- createdAt
+- updatedAt
+
+TICKET
+
+Core fields:
+
+- ticket number
+- subject
+- description
+- customer
+- assignee
+- team
+- status
+- priority
+- category
+- tags
+- SLA policy
+- SLA deadline
+- SLA state
+- first response deadline
+- resolution deadline
+- timestamps
+- createdAt
+- updatedAt
+
+Statuses:
+
+- open
+- pending
+- in_progress
+- resolved
+- closed
+
+Priorities:
+
+- low
+- medium
+- high
+- urgent
+
+MESSAGE
+
+- ticket
+- author
+- body
+- type
+- attachments
+- createdAt
+- updatedAt
+
+Message types:
+
+- customer_reply
+- agent_reply
+- internal_note
+- system
+
+SLA POLICY
+
+- name
+- priority
+- firstResponseTime
+- resolutionTime
+- businessHours
+- active
+- createdAt
+- updatedAt
+
+KNOWLEDGE ARTICLE
+
+- title
+- slug
+- content
+- category
+- tags
+- published
+- author
+- createdAt
+- updatedAt
+
+NOTIFICATION
+
+- user
+- type
+- title
+- message
+- read
+- relatedEntity
+- createdAt
+
+AUDIT LOG
+
+- actor
+- action
+- entityType
+- entityId
+- metadata
+- createdAt
+
+================================================================================
+14. TICKET BUSINESS RULES
+================================================================================
+
+Ticket lifecycle:
+
+open
+→ in_progress
+→ pending
+→ resolved
+→ closed
+
+Some transitions may be allowed depending on role and business rules.
+
+The backend must validate state transitions.
+
+Frontend controls alone are NOT sufficient.
+
+Examples:
+
+- Customer can create a ticket.
+- Customer can reply to their own ticket.
+- Agent can update assigned/team tickets according to permissions.
+- Manager can manage team tickets.
+- Admin has system-level permissions.
+- Customers cannot modify another customer's ticket.
+- Customers cannot modify SLA configuration.
+- Customers cannot change ticket ownership arbitrarily.
+- Internal notes must never be exposed to customers.
+
+================================================================================
+15. AUTHENTICATION AND AUTHORIZATION
+================================================================================
+
+Authentication answers:
+
+"Who are you?"
+
+Authorization answers:
+
+"Are you allowed to do this?"
+
+Both must be implemented correctly.
+
+Never trust:
+
+- user IDs
+- roles
+- permissions
+- ownership
+- ticket IDs
+- team IDs
+
+sent from the client.
+
+The server must determine the authenticated user from the secure session.
+
+The server must check authorization before sensitive operations.
+
+Passwords must never be stored in plaintext.
+
+Use a strong password hashing algorithm such as bcrypt or Argon2.
+
+Use secure HTTP-only cookies where appropriate.
+
+Do not expose secrets to the frontend.
+
+================================================================================
+16. SECURITY REQUIREMENTS
+================================================================================
+
+Security is a core requirement.
+
+Consider:
+
+- Password hashing
+- HTTP-only cookies
+- Secure cookies in production
+- SameSite configuration
+- CSRF protection where relevant
+- CORS configuration
+- Input validation
+- Output handling
+- XSS prevention
+- Authorization checks
+- Object-level access control
+- Rate limiting
+- Security headers
+- File upload validation
+- File size limits
+- MIME/type validation
+- Safe error messages
+- Environment variable protection
+- Secret management
+- Dependency vulnerability checks
+- Audit logging
+- Secure logging
+
+Never log:
+
+- passwords
+- tokens
+- private credentials
+- sensitive secrets
+
+Do not implement security only after the entire application is finished.
+
+Review security during each relevant feature.
+
+================================================================================
+17. DATABASE AND PERFORMANCE
+================================================================================
+
+Use indexes where query patterns justify them.
+
+Likely indexed fields include:
+
+- ticket number
+- ticket status
+- priority
+- assignee
+- customer
+- team
+- SLA deadline
+- createdAt
+- updatedAt
+- email where appropriate
+
+Avoid unnecessary database queries.
+
+Avoid N+1 query patterns where possible.
+
+Use pagination for large lists.
+
+Do not load thousands of tickets into the browser at once.
+
+Use server-side filtering/searching where appropriate.
+
+Do not optimize blindly.
+
+Measure or reason about the actual bottleneck first.
+
+================================================================================
+18. REDIS AND BACKGROUND JOBS
+================================================================================
+
+Redis may be used for:
+
+- Caching
+- Queues
+- Rate limiting
+- Temporary state
+
+BullMQ should handle background work such as:
+
+- SLA monitoring
+- Email sending
+- Notifications
+- AI processing
+- Scheduled maintenance jobs
+
+Do not perform expensive background work synchronously during normal API
+requests when it can reasonably be queued.
+
+Example:
+
+User creates ticket
+→ ticket saved
+→ background jobs queued
+→ API responds
+→ worker processes email/AI/etc.
+
+================================================================================
+19. REALTIME FEATURES
+================================================================================
+
+Use Socket.IO where realtime behavior provides meaningful value.
+
+Potential realtime features:
+
+- New ticket notification
+- New message
+- Ticket assignment update
+- Ticket status update
+- SLA state change
+- Notification updates
+
+Do not add realtime functionality simply because the technology exists.
+
+Keep the architecture understandable.
+
+================================================================================
+20. AI FEATURES
+================================================================================
+
+AI should be an enhancement, not the foundation of the product.
+
+Potential features:
+
+- Ticket summarization
+- Suggested category
+- Suggested priority
+- Suggested reply
+- Knowledge article recommendations
+
+AI provider access must happen server-side.
+
+Do not expose provider API keys in the browser.
+
+AI responses must be treated as suggestions.
+
+Agents should remain in control.
+
+The system should not blindly apply AI-generated actions.
+
+================================================================================
+21. SEARCH AND FILTERING
+================================================================================
+
+Ticket lists should support useful filtering such as:
+
+- Status
+- Priority
+- Assignee
+- Team
+- Customer
+- SLA state
+- Category
+- Date
+
+Search should support relevant ticket/customer fields.
+
+Filtering should be predictable.
+
+URL/query parameters may be used where useful.
+
+Pagination must be considered.
+
+================================================================================
+22. UI STATES
+================================================================================
+
+Every important data-driven screen should consider:
+
+- Loading
+- Empty
+- Error
+- Success
+- Partial data
+- Disabled state
+- Permission denied
+- Offline/realtime disconnected state where relevant
+
+Do not build only the "happy path."
+
+================================================================================
+23. RESPONSIVE DESIGN
+================================================================================
+
+The product is primarily desktop-oriented because support agents commonly work
+on desktop screens.
+
+However, it should remain usable on:
+
+- Laptop
+- Tablet
+- Smaller screens
+
+The three-column Agent Workspace may collapse appropriately on smaller screens.
+
+Do not simply shrink desktop UI until it becomes unusable.
+
+================================================================================
+24. ACCESSIBILITY
+================================================================================
+
+Use semantic HTML.
+
+Ensure:
+
+- Keyboard navigation
+- Visible focus states
+- Accessible labels
+- Proper button semantics
+- Sufficient contrast
+- Form error messages
+- Accessible dialogs
+- Accessible dropdowns
+- Screen-reader-friendly important content
+
+Do not rely on color alone to communicate ticket state or SLA urgency.
+
+================================================================================
+25. API DESIGN
+================================================================================
+
+Use REST-style APIs.
+
+Potential endpoint structure:
+
+AUTH
+
+POST /api/auth/login
+POST /api/auth/logout
+GET /api/auth/me
+POST /api/auth/refresh
+POST /api/auth/forgot-password
+POST /api/auth/reset-password
+
+TICKETS
+
+GET /api/tickets
+POST /api/tickets
+GET /api/tickets/:id
+PATCH /api/tickets/:id
+DELETE /api/tickets/:id
+
+POST /api/tickets/:id/messages
+POST /api/tickets/:id/internal-notes
+POST /api/tickets/:id/assign
+POST /api/tickets/:id/status
+POST /api/tickets/:id/priority
+
+SLA
+
+GET /api/sla/policies
+POST /api/sla/policies
+PATCH /api/sla/policies/:id
+DELETE /api/sla/policies/:id
+
+CUSTOMERS
+
+GET /api/customers
+GET /api/customers/:id
+PATCH /api/customers/:id
+
+TEAMS
+
+GET /api/teams
+POST /api/teams
+PATCH /api/teams/:id
+
+USERS
+
+GET /api/users
+PATCH /api/users/:id
+PATCH /api/users/:id/role
+
+KNOWLEDGE BASE
+
+GET /api/articles
+POST /api/articles
+GET /api/articles/:slug
+PATCH /api/articles/:id
+
+NOTIFICATIONS
+
+GET /api/notifications
+PATCH /api/notifications/:id/read
+
+ANALYTICS
+
+GET /api/analytics/overview
+GET /api/analytics/tickets
+GET /api/analytics/sla
+GET /api/analytics/agents
+
+The exact API can evolve.
+
+Controllers should remain thin where possible.
+
+Business logic should live in services/domain-oriented modules.
+
+================================================================================
+26. ENVIRONMENT VARIABLES
+================================================================================
+
+Use .env.local locally.
+
+Provide .env.example.
+
+Possible variables:
+
+NODE_ENV=
+
+NEXT_PUBLIC_APP_URL=
+
+MONGODB_URI=
+
+JWT_SECRET=
+OR
+SESSION_SECRET=
+
+REDIS_URL=
+
+S3_ENDPOINT=
+S3_ACCESS_KEY=
+S3_SECRET_KEY=
+S3_BUCKET=
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+EMAIL_HOST=
+EMAIL_PORT=
+EMAIL_USER=
+EMAIL_PASSWORD=
+EMAIL_FROM=
+
+AI_API_KEY=
+
+Never commit real secrets.
+
+Never place secret server variables under NEXT_PUBLIC_.
+
+================================================================================
+27. TESTING REQUIREMENTS
+================================================================================
+
+Test important business logic.
+
+Unit tests:
+
+- SLA calculations
+- Ticket state transitions
+- Permission checks
+- Validation
+- Utility functions
+
+API/integration tests:
+
+- Authentication
+- Authorization
+- Ticket creation
+- Ticket access
+- Ticket updates
+- Message creation
+- SLA behavior
+
+E2E tests:
+
+- Customer creates ticket
+- Agent sees ticket
+- Agent replies
+- Customer sees reply
+- Agent resolves ticket
+- Unauthorized user cannot access another user's ticket
+
+Testing is part of the implementation, not an optional final step.
+
+================================================================================
+28. SCALABILITY
+================================================================================
+
+Do not over-engineer.
+
+The initial portfolio project does NOT need Kubernetes, microservices, or a
+massively distributed architecture.
+
+However, the architecture should be reasonably scalable.
+
+Understand these concepts:
+
+- Stateless application servers
+- Horizontal scaling
+- Load balancing
+- Database indexing
+- Caching
+- Background queues
+- Connection management
+- Rate limiting
+- Pagination
+- CDN/object storage
+- Observability
+
+The system should be structured so the API layer could theoretically be scaled
+horizontally behind a load balancer.
+
+Do not implement complicated infrastructure merely to claim scalability.
+
+================================================================================
+29. OBSERVABILITY
+================================================================================
+
+Consider:
+
+- Structured logging
+- Error tracking
+- Request IDs
+- Background job monitoring
+- Basic metrics
+- Health checks
+
+Do not expose sensitive information in logs.
+
+================================================================================
+30. DOCKER
+================================================================================
+
+Provide Docker support for reproducible local development.
+
+Potential services:
+
+- frontend
+- backend if separated
+- MongoDB
+- Redis
+
+Keep Docker configuration understandable.
+
+Do not introduce unnecessary infrastructure.
+
+================================================================================
+31. GIT WORKFLOW
+================================================================================
+
+Git must be used from the beginning.
+
+Important milestones should be committed.
+
+Examples:
+
+git add .
+git commit -m "feat: implement ticket management"
+git push
+
+Do not commit secrets.
+
+Use meaningful commit messages.
+
+Before major risky changes, create a checkpoint.
+
+Claude should NOT make destructive repository-wide changes without confirmation.
+
+================================================================================
+32. CLAUDE CODE WORKING RULES
+================================================================================
+
+Claude Code is an engineering assistant, not an autonomous decision-maker.
+
+Before major implementation:
+
+- Inspect existing code.
+- Understand the architecture.
+- Check existing conventions.
+- Avoid unnecessary rewrites.
+
+For complex features:
+
+Use plan-first thinking.
+
+Explain:
+
+1. What will be changed.
+2. Why.
+3. Which files are affected.
+4. Important risks.
+5. How it will be tested.
+
+Then implement after approval where appropriate.
+
+Do not modify unrelated files.
+
+Do not install unnecessary dependencies.
+
+Do not rewrite working code simply for stylistic preference.
+
+Do not introduce TypeScript.
+
+Do not create duplicate components when an existing reusable component works.
+
+================================================================================
+33. LEARNING REQUIREMENT
+================================================================================
+
+The developer wants to become capable of explaining the project in interviews.
+
+Therefore, after implementing a significant feature, Claude should provide a
+short explanation covering:
+
+- What was built
+- Important files
+- How data flows
+- Why the architecture was chosen
+- Security considerations
+- Testing performed
+- Important tradeoffs
+
+Keep explanations concise.
+
+Do not write enormous tutorials after every tiny change.
+
+For major systems, explain enough that the developer can study the concept.
+
+================================================================================
+34. OUT OF SCOPE
+================================================================================
+
+Do NOT prioritize:
+
+- Kubernetes
+- Microservices
+- Complex event-driven architecture
+- Multi-region deployment
+- Advanced distributed systems
+- Custom ML model training
+- Enterprise SSO unless specifically required
+- Complex billing
+- Complex subscription management
+- Native mobile apps
+- Excessive third-party integrations
+- Overly complex observability platforms
+
+These may be documented as future scalability directions rather than fully
+implemented.
+
+================================================================================
+35. BUILD ORDER
+================================================================================
+
+PHASE 1 — FOUNDATION
+
+- Repository setup
+- Next.js setup
+- Tailwind
+- Project structure
+- Design system
+- Basic layout
+- Git
+
+PHASE 2 — DATABASE
+
+- MongoDB
+- Mongoose
+- Models
+- Indexes
+- Seed data
+
+PHASE 3 — AUTHENTICATION
+
+- Login
+- Session
+- Password hashing
+- Authorization
+- Roles
+
+PHASE 4 — CORE TICKETS
+
+- Ticket creation
+- Ticket list
+- Ticket detail
+- Messages
+- Internal notes
+- Assignment
+- Status
+- Priority
+
+PHASE 5 — SLA
+
+- SLA policies
+- Deadline calculations
+- SLA states
+- SLA indicators
+- Breach logic
+
+PHASE 6 — CUSTOMER EXPERIENCE
+
+- Customer dashboard
+- Create ticket
+- Ticket detail
+- Replies
+- Knowledge base
+
+PHASE 7 — AGENT EXPERIENCE
+
+- Agent workspace
+- Queues
+- Filters
+- Search
+- Customer context
+- Notifications
+
+PHASE 8 — REALTIME
+
+- Socket.IO
+- Live messages
+- Ticket updates
+- Notifications
+
+PHASE 9 — BACKGROUND JOBS
+
+- Redis
+- BullMQ
+- SLA jobs
+- Email jobs
+- AI jobs
+
+PHASE 10 — ADMIN
+
+- User management
+- Team management
+- SLA management
+- Knowledge base
+- Audit logs
+- Analytics
+
+PHASE 11 — AI
+
+- Ticket summary
+- Category suggestion
+- Priority suggestion
+- Suggested replies
+- Knowledge recommendations
+
+PHASE 12 — QUALITY
+
+- Security review
+- Tests
+- Performance review
+- Accessibility
+- Responsive design
+- Error handling
+- Loading states
+
+PHASE 13 — DEPLOYMENT
+
+- Docker
+- Environment configuration
+- CI/CD
+- Deployment
+- README
+
+================================================================================
+36. FIRST MVP TARGET
+================================================================================
+
+The first polished MVP should prioritize:
+
+- Design system
+- App shell
+- Agent Workspace
+- Ticket Detail
+- Customer UI
+- Admin UI
+- Realistic mock data
+- Responsive behavior
+
+Do NOT attempt to build all advanced infrastructure immediately.
+
+Avoid spending the first few hours on:
+
+- Redis
+- BullMQ
+- complex AI
+- full realtime
+- advanced analytics
+- deployment infrastructure
+
+Get the core product experience right first.
+
+================================================================================
+37. DEFINITION OF DONE — MVP
+================================================================================
+
+MVP is done when:
+
+- User can authenticate
+- Roles work
+- Customer can create a ticket
+- Agent can view tickets
+- Agent can respond
+- Internal notes work
+- Ticket status works
+- Ticket priority works
+- Assignment works
+- Customer can see their own tickets
+- Unauthorized access is prevented
+- Core UI is polished
+- Loading/error/empty states exist
+- Basic tests pass
+- No obvious security flaws exist
+- Project can run locally
+- README explains setup
+
+================================================================================
+38. DEFINITION OF DONE — FULL PROJECT
+================================================================================
+
+Full project is done when:
+
+- Core customer support workflow works
+- SLA system works
+- Background jobs work
+- Notifications work
+- Realtime updates work
+- Knowledge base works
+- Admin functions work
+- Analytics work
+- AI assistance works
+- Attachments work
+- Search/filtering works
+- Security review completed
+- Unit/API/E2E tests exist
+- Docker works
+- Environment setup is documented
+- GitHub repository is clean
+- README is professional
+- Demo data exists
+- Architecture can be explained in an interview
+
+================================================================================
+39. PORTFOLIO STANDARD
+================================================================================
+
+The final application should communicate:
+
+"I understand how a real SaaS product is designed and engineered."
+
+It should NOT communicate:
+
+"An AI generated a dashboard for me."
+
+Important evidence of engineering quality:
+
+- Thoughtful architecture
+- Clear business rules
+- Proper authorization
+- Validation
+- Database indexes
+- Background processing
+- Testing
+- Error handling
+- Realistic data
+- Clean UI
+- Responsive design
+- Security
+- Good README
+- Meaningful Git history
+
+================================================================================
+40. FINAL PRIORITY ORDER
+================================================================================
+
+When making tradeoffs, prioritize:
+
+1. Correctness
+2. Security
+3. User experience
+4. Maintainability
+5. Performance
+6. Scalability
+7. Visual polish
+8. Extra features
+
+Do not sacrifice security or correctness for visual polish.
+
+Do not sacrifice maintainability for unnecessary complexity.
+
+Do not add technology merely because it looks impressive on a resume.
+
+================================================================================
+FINAL INSTRUCTION TO CLAUDE
+================================================================================
+
+Build SupportDesk as if it were a real product being reviewed by experienced
+software engineers and product designers.
+
+Use AI to accelerate development, but keep the architecture understandable.
+
+Do not blindly generate code.
+
+Inspect first.
+
+Plan complex work.
+
+Implement in small logical milestones.
+
+Test changes.
+
+Explain important decisions.
+
+Respect the approved visual design.
+
+Protect the application against common security problems.
+
+Avoid unnecessary complexity.
+
+The developer must be able to understand and defend the important engineering
+decisions made in this project.
+
+================================================================================
+END OF SUPPORTDESK PROJECT CONTEXT
+================================================================================
