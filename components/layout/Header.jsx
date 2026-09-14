@@ -2,7 +2,8 @@
 
 import { cn } from "@/lib/utils/cn";
 import { Avatar } from "@/components/ui/Avatar";
-import { SearchIcon, BellIcon, HelpIcon, MenuIcon } from "@/components/ui/icons";
+import { SearchIcon, HelpIcon, MenuIcon } from "@/components/ui/icons";
+import { NotificationBell } from "./NotificationBell";
 
 /**
  * Top app bar: mobile nav toggle, global search, and account/notification
@@ -43,13 +44,7 @@ export function Header({ onMenuClick, user, className }) {
       </label>
 
       <div className="ml-auto flex items-center gap-1">
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-surface-hover hover:text-text-primary"
-        >
-          <BellIcon className="h-5 w-5" />
-        </button>
+        <NotificationBell />
         <button
           type="button"
           aria-label="Help"
