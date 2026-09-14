@@ -73,7 +73,9 @@ export function AgentWorkspace({ initialNow }) {
   const [actionError, setActionError] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isMessagesLoading, setIsMessagesLoading] = useState(true);
+  const [aiDraftReply, setAiDraftReply] = useState(null);
   const selectedTicketIdRef = useRef(null);
+  const aiDraftTokenRef = useRef(0);
 
   const loadTickets = useCallback(() => {
     return fetchTickets({ limit: TICKET_LIST_LIMIT })
@@ -215,7 +217,13 @@ export function AgentWorkspace({ initialNow }) {
     setSelectedTicketId(ticketId);
     setIsMessagesLoading(true);
     setActionError(null);
+    setAiDraftReply(null);
     setMobileDetailOpen(true);
+  }
+
+  function handleUseAiDraftAsReply(text) {
+    aiDraftTokenRef.current += 1;
+    setAiDraftReply({ text, token: aiDraftTokenRef.current });
   }
 
   function handleFilterChange(patch) {
@@ -287,6 +295,8 @@ export function AgentWorkspace({ initialNow }) {
         onPriorityChange: handlePriorityChange,
         onAssigneeChange: handleAssigneeChange,
         onAddMessage: (payload) => handleAddMessage(selectedTicket.id, payload),
+        draftReply: aiDraftReply,
+        onUseAsReply: handleUseAiDraftAsReply,
       }
     : { ticket: null };
 

@@ -60,6 +60,11 @@ export async function createMessage({ ticketId, authorId, authorModel, body, isI
 
   const type = isInternal ? "internal_note" : authorModel === "Customer" ? "customer_reply" : "agent_reply";
 
+  if (type === "agent_reply" && !ticket.firstRespondedAt) {
+    ticket.firstRespondedAt = new Date();
+    await ticket.save();
+  }
+
   const created = await Message.create({ ticket: ticket._id, author: authorId, authorModel, body, type, attachments });
   const populated = await created.populate("author", "name email");
   const presented = presentMessage(populated);

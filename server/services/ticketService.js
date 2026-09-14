@@ -195,6 +195,9 @@ export async function transitionTicketStatus(id, nextStatus) {
   const { slaState } = recalcSlaOnStatusChange(ticket, nextStatus, now);
   ticket.status = nextStatus;
   ticket.slaState = slaState;
+  if (nextStatus === STATUSES.RESOLVED) {
+    ticket.resolvedAt = now;
+  }
   await ticket.save();
   const updated = presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)), now);
   publish(REALTIME_EVENTS.TICKET_UPDATED, updated);

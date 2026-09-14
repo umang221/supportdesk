@@ -2,6 +2,7 @@ import { TicketDetailHeader } from "./TicketDetailHeader";
 import { TicketCustomerPanel } from "./TicketCustomerPanel";
 import { TicketAssignmentPanel } from "./TicketAssignmentPanel";
 import { TicketMetaPanel } from "./TicketMetaPanel";
+import { TicketAiPanel } from "./TicketAiPanel";
 import { TicketConversation } from "./TicketConversation";
 import { TicketComposer } from "./TicketComposer";
 import { TicketDetailSkeleton } from "./TicketDetailSkeleton";
@@ -42,6 +43,8 @@ export function TicketDetail({
   onAssigneeChange,
   onAddMessage,
   onClose,
+  draftReply,
+  onUseAsReply,
 }) {
   if (isLoading) return <TicketDetailSkeleton />;
   if (!ticket) return <EmptyState />;
@@ -67,6 +70,12 @@ export function TicketDetail({
           onAssigneeChange={onAssigneeChange}
         />
         <TicketMetaPanel ticket={ticket} />
+        <TicketAiPanel
+          ticketId={ticket.id}
+          currentPriority={ticket.priority}
+          onApplyPriority={onPriorityChange}
+          onUseAsReply={onUseAsReply}
+        />
         {isMessagesLoading && messages.length === 0 ? (
           <p className="p-space-lg text-body-sm text-text-tertiary">Loading conversation…</p>
         ) : (
@@ -74,7 +83,7 @@ export function TicketDetail({
         )}
       </div>
 
-      <TicketComposer onSubmit={onAddMessage} />
+      <TicketComposer key={draftReply?.token ?? "default"} onSubmit={onAddMessage} draftReply={draftReply} />
     </div>
   );
 }

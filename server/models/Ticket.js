@@ -29,6 +29,11 @@ const ticketSchema = new mongoose.Schema(
     },
     channel: { type: String, enum: TICKET_CHANNELS, default: "email" },
     dueAt: { type: Date, default: null },
+    // Set once, the first time an agent replies / the ticket is resolved —
+    // used by server/services/analyticsService.js for first-response/
+    // resolution-time metrics. Never set from client input.
+    firstRespondedAt: { type: Date, default: null },
+    resolvedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
+import { ROLES } from "@/lib/constants/roles";
 
-export const USER_ROLES = ["agent", "team_lead", "admin"];
+export const USER_ROLES = Object.values(ROLES);
 
 const userSchema = new mongoose.Schema(
   {

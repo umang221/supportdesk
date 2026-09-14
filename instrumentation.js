@@ -11,6 +11,11 @@ export async function register() {
 
   const { registerJob, startJob } = await import("@/server/jobs/jobRunner");
   const { runSlaMonitorSweep } = await import("@/server/jobs/slaMonitorJob");
+  const { loadSlaPolicyOverrides } = await import("@/server/services/slaPolicyService");
+
+  // Load any admin-edited SLA policy overrides before the monitor job (or
+  // any request) can read the defaults — see lib/constants/sla-policy.js.
+  await loadSlaPolicyOverrides().catch((error) => console.error("Failed to load SLA policy overrides:", error));
 
   registerJob({ name: "sla-monitor", intervalMs: SLA_MONITOR_INTERVAL_MS, run: runSlaMonitorSweep });
   startJob("sla-monitor");

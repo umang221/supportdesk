@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Avatar, Badge } from "@/components/ui";
+import { Avatar, Badge, Button } from "@/components/ui";
 import { SearchIcon } from "@/components/ui/icons";
+import { createAdminTeam } from "@/lib/api/admin";
+import { normalizeAdminTeam } from "@/lib/api/admin-adapter";
 
 const OPEN_STATUSES = new Set(["open", "pending", "on_hold"]);
 
@@ -46,8 +48,60 @@ function TeamCard({ team, teamAgents, teamTickets }) {
   );
 }
 
-/** Team roster: each team's description, headcount, ticket load, and members. */
-export function AdminTeams({ teams, agents, tickets }) {
+function NewTeamForm({ onCreated }) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      const { team } = await createAdminTeam({ name, description });
+      onCreated(normalizeAdminTeam(team));
+      setName("");
+      setDescription("");
+    } catch (err) {
+      setError(err.fieldErrors ? Object.values(err.fieldErrors)[0] : err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border-subtle p-space-md">
+      <div className="flex flex-1 min-w-40 flex-col gap-1">
+        <label className="text-label-sm text-text-tertiary" htmlFor="new-team-name">Team name</label>
+        <input
+          id="new-team-name"
+          required
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          className="h-8 rounded-md border border-border-subtle bg-surface-card px-2 text-body-sm text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent-subtle"
+        />
+      </div>
+      <div className="flex flex-2 min-w-50 flex-col gap-1">
+        <label className="text-label-sm text-text-tertiary" htmlFor="new-team-description">Description</label>
+        <input
+          id="new-team-description"
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          className="h-8 rounded-md border border-border-subtle bg-surface-card px-2 text-body-sm text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent-subtle"
+        />
+      </div>
+      <Button type="submit" size="compact" disabled={isSubmitting}>
+        {isSubmitting ? "Adding…" : "Add team"}
+      </Button>
+      {error ? <p className="w-full text-label-sm text-sla-critical-text">{error}</p> : null}
+    </form>
+  );
+}
+
+/** Team roster: each team's description, headcount, ticket load, members, and creation — backed by /api/admin/teams. */
+export function AdminTeams({ teams: initialTeams, agents, tickets }) {
+  const [teams, setTeams] = useState(initialTeams);
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => teams.filter((team) => matchesSearch(team, search)), [teams, search]);
@@ -58,6 +112,8 @@ export function AdminTeams({ teams, agents, tickets }) {
         <h1 className="text-headline-md text-text-primary">Teams</h1>
         <p className="text-body-sm text-text-tertiary">Team rosters and workload across the support org.</p>
       </div>
+
+      <NewTeamForm onCreated={(team) => setTeams((current) => [...current, team])} />
 
       <label className="relative flex max-w-sm items-center">
         <span className="sr-only">Search teams</span>

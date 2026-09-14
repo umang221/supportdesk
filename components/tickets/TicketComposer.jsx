@@ -9,10 +9,17 @@ import { SendIcon, PaperclipIcon, NoteIcon } from "@/components/ui/icons";
  * and triggers the corresponding reply email. The attachment control
  * remains presentational only — file upload has a working backend
  * (server/attachments/attachmentService.js) but no composer UI yet.
+ *
+ * `draftReply` optionally seeds the body from TicketAiPanel's "Use as
+ * reply" action (see AgentWorkspace's aiDraftReply state). TicketDetail
+ * renders this component with `key={draftReply?.token}`, so a new token
+ * remounts it fresh with the suggested text pre-filled — a plain lazy
+ * initial state, not an effect, since this is "reset the component to a
+ * new starting value" rather than "synchronize with an external system".
  */
-export function TicketComposer({ onSubmit }) {
+export function TicketComposer({ onSubmit, draftReply }) {
   const [mode, setMode] = useState("reply");
-  const [body, setBody] = useState("");
+  const [body, setBody] = useState(() => draftReply?.text ?? "");
   const isNote = mode === "note";
 
   function handleSubmit(event) {
