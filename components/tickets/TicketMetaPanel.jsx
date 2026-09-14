@@ -9,7 +9,7 @@ export function TicketMetaPanel({ ticket }) {
       <h3 className="text-label-sm font-medium text-text-secondary">Details</h3>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-label-sm">
         <dt className="text-text-tertiary">Ticket ID</dt>
-        <dd className="font-mono text-text-primary">{ticket.id}</dd>
+        <dd className="font-mono text-text-primary">{ticket.ticketNumber ?? ticket.id}</dd>
 
         <dt className="text-text-tertiary">Channel</dt>
         <dd className="text-text-primary">{CHANNEL_LABELS[ticket.channel] ?? ticket.channel}</dd>

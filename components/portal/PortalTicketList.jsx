@@ -16,7 +16,7 @@ function findMeta(list, value) {
 
 function matchesSearch(ticket, query) {
   if (!query) return true;
-  return `${ticket.id} ${ticket.subject}`.toLowerCase().includes(query.toLowerCase());
+  return `${ticket.ticketNumber ?? ticket.id} ${ticket.subject}`.toLowerCase().includes(query.toLowerCase());
 }
 
 /** Full list of the customer's own tickets, with search + status filter. */
@@ -98,7 +98,7 @@ export function PortalTicketList({ tickets, initialNow }) {
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-body-sm font-medium text-text-primary">{ticket.subject}</p>
-                    <p className="font-mono text-label-sm text-text-tertiary">{ticket.id}</p>
+                    <p className="font-mono text-label-sm text-text-tertiary">{ticket.ticketNumber ?? ticket.id}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant={priorityMeta?.badgeVariant}>{priorityMeta?.label ?? ticket.priority}</Badge>

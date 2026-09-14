@@ -1,4 +1,3 @@
-import { agents, getTeamById } from "@/lib/mock-data";
 import { TicketDetailHeader } from "./TicketDetailHeader";
 import { TicketCustomerPanel } from "./TicketCustomerPanel";
 import { TicketAssignmentPanel } from "./TicketAssignmentPanel";
@@ -32,8 +31,10 @@ export function TicketDetail({
   assignee,
   messages,
   agentsById,
+  assignableAgents,
   now,
   isLoading,
+  error,
   onStatusChange,
   onPriorityChange,
   onAssigneeChange,
@@ -43,13 +44,12 @@ export function TicketDetail({
   if (isLoading) return <TicketDetailSkeleton />;
   if (!ticket) return <EmptyState />;
 
-  const team = getTeamById(assignee?.teamId ?? ticket.teamId);
-
   return (
     <div className="flex h-full flex-col">
       <TicketDetailHeader
         ticket={ticket}
         now={now}
+        error={error}
         onStatusChange={onStatusChange}
         onPriorityChange={onPriorityChange}
         onClose={onClose}
@@ -59,8 +59,8 @@ export function TicketDetail({
         <TicketCustomerPanel customer={customer} />
         <TicketAssignmentPanel
           assignee={assignee}
-          team={team}
-          agents={agents}
+          team={ticket.team}
+          agents={assignableAgents ?? []}
           assigneeId={ticket.assigneeId}
           onAssigneeChange={onAssigneeChange}
         />

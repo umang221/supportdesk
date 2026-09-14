@@ -23,7 +23,7 @@ export function TicketRow({ ticket, customer, assignee, selected, onSelect, now 
       className="cursor-pointer"
     >
       <TableCell className="whitespace-nowrap font-mono text-label-sm text-text-tertiary">
-        {ticket.id}
+        {ticket.ticketNumber ?? ticket.id}
       </TableCell>
       <TableCell className="max-w-0">
         <div className="truncate font-medium text-text-primary">{ticket.subject}</div>

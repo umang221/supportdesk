@@ -57,7 +57,7 @@ export function PortalTicketDetail({ ticket, customer, assignee, team, messages,
 
       <div className="rounded-lg border border-border-subtle bg-surface-card">
         <div className="border-b border-border-subtle p-space-lg">
-          <p className="font-mono text-label-sm text-text-tertiary">{ticket.id}</p>
+          <p className="font-mono text-label-sm text-text-tertiary">{ticket.ticketNumber ?? ticket.id}</p>
           <h1 className="text-headline-sm text-text-primary">{ticket.subject}</h1>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">

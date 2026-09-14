@@ -36,7 +36,7 @@ function TicketLine({ ticket, now }) {
     >
       <div className="min-w-0 flex-1">
         <p className="truncate text-body-sm font-medium text-text-primary">{ticket.subject}</p>
-        <p className="font-mono text-label-sm text-text-tertiary">{ticket.id}</p>
+        <p className="font-mono text-label-sm text-text-tertiary">{ticket.ticketNumber ?? ticket.id}</p>
       </div>
       <Badge variant={priorityMeta?.badgeVariant} className="shrink-0">
         {priorityMeta?.label ?? ticket.priority}

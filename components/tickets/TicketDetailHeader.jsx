@@ -9,7 +9,7 @@ import { formatSlaCountdown } from "@/lib/utils/format-sla-countdown";
  * selects update local workspace state only (see AgentWorkspace's
  * `ticketOverrides`) — there's no backend yet to persist a real transition.
  */
-export function TicketDetailHeader({ ticket, now, onStatusChange, onPriorityChange, onClose }) {
+export function TicketDetailHeader({ ticket, now, error, onStatusChange, onPriorityChange, onClose }) {
   const sla = formatSlaCountdown(ticket, now);
 
   return (
@@ -26,7 +26,7 @@ export function TicketDetailHeader({ ticket, now, onStatusChange, onPriorityChan
           </button>
         ) : null}
         <div className="min-w-0 flex-1">
-          <p className="font-mono text-label-sm text-text-tertiary">{ticket.id}</p>
+          <p className="font-mono text-label-sm text-text-tertiary">{ticket.ticketNumber ?? ticket.id}</p>
           <h2 className="text-headline-sm text-text-primary">{ticket.subject}</h2>
         </div>
       </div>
@@ -66,6 +66,8 @@ export function TicketDetailHeader({ ticket, now, onStatusChange, onPriorityChan
 
         <SlaIndicator variant={sla.variant} label={sla.label} />
       </div>
+
+      {error ? <p className="mt-2 text-label-sm text-sla-critical-text">{error}</p> : null}
     </div>
   );
 }
