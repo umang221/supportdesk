@@ -68,7 +68,7 @@ export async function markNotificationRead(id, recipientId) {
   const notification = await Notification.findOneAndUpdate(
     { _id: id, recipient: recipientId },
     { $set: { read: true } },
-    { new: true }
+    { returnDocument: "after" }
   ).populate("relatedTicket", "ticketNumber subject");
 
   return notification;

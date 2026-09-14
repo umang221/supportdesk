@@ -68,7 +68,7 @@ export async function updateSlaPolicy(priority, { firstResponseMinutes, resoluti
   const updated = await SlaPolicy.findOneAndUpdate(
     { priority },
     { $set: { firstResponseMinutes, resolutionMinutes } },
-    { new: true, upsert: true, runValidators: true }
+    { returnDocument: "after", upsert: true, runValidators: true }
   );
 
   setSlaPolicyOverride(priority, { firstResponseMinutes, resolutionMinutes });

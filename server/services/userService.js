@@ -79,7 +79,7 @@ export async function updateUser(id, patch, actingUser) {
   if (patch.title !== undefined) update.title = patch.title;
   if (patch.isActive !== undefined) update.isActive = Boolean(patch.isActive);
 
-  const user = await User.findByIdAndUpdate(id, { $set: update }, { new: true, runValidators: true }).select(
+  const user = await User.findByIdAndUpdate(id, { $set: update }, { returnDocument: "after", runValidators: true }).select(
     "name email role team title isActive avatarUrl"
   );
   if (!user) return null;

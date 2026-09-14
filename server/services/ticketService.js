@@ -170,7 +170,7 @@ export async function updateTicket(id, patch) {
   }
 
   const ticket = await populateTicketRefs(
-    Ticket.findByIdAndUpdate(id, { $set: update }, { new: true, runValidators: true })
+    Ticket.findByIdAndUpdate(id, { $set: update }, { returnDocument: "after", runValidators: true })
   );
   const updated = presentTicket(ticket);
   if (updated) publish(REALTIME_EVENTS.TICKET_UPDATED, updated);

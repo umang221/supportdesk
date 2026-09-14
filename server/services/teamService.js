@@ -38,7 +38,7 @@ export async function updateTeam(id, { name, description }, actingUser) {
   if (description !== undefined) patch.description = description;
 
   try {
-    const team = await Team.findByIdAndUpdate(id, { $set: patch }, { new: true, runValidators: true });
+    const team = await Team.findByIdAndUpdate(id, { $set: patch }, { returnDocument: "after", runValidators: true });
     if (!team) return null;
     await recordAudit({
       actingUser,

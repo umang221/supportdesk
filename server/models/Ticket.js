@@ -44,5 +44,14 @@ ticketSchema.index({ assignee: 1 });
 ticketSchema.index({ team: 1 });
 ticketSchema.index({ customer: 1 });
 ticketSchema.index({ slaState: 1 });
+// listTickets (server/services/ticketService.js) always sorts by this, with
+// or without a filter — without an index, an unfiltered "show every ticket,
+// newest activity first" query (the queue's default view) would need a
+// full collection scan just to sort once the ticket count grows.
+ticketSchema.index({ updatedAt: -1 });
+// server/jobs/slaMonitorJob.js's sweep query runs every 60s for the life of
+// the process and filters on exactly this pair — worth its own compound
+// index rather than relying on the separate single-field ones above.
+ticketSchema.index({ status: 1, slaState: 1 });
 
 export default mongoose.models.Ticket || mongoose.model("Ticket", ticketSchema);
