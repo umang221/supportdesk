@@ -68,10 +68,12 @@ export function recalcSlaOnStatusChange(ticket, nextStatus, now = new Date()) {
 
 /**
  * The SLA state to display for a ticket right now, without persisting it.
- * There is no background job to keep an idle ticket's stored slaState fresh
- * (out of scope for this task), so every read recomputes it on the fly for
- * active tickets; paused/completed tickets aren't governed by the countdown
- * and keep their stored state as-is.
+ * server/jobs/slaMonitorJob.js periodically persists this same calculation
+ * for every active ticket, but only on its own interval — a read between
+ * sweeps could still be looking at a slightly stale stored value, so every
+ * read recomputes it live for active tickets rather than trusting the
+ * stored field alone. Paused/completed tickets aren't governed by the
+ * countdown and keep their stored state as-is.
  */
 export function getLiveSlaState(ticket, now = new Date()) {
   if (ticket.slaState === SLA_STATES.PAUSED || ticket.slaState === SLA_STATES.COMPLETED) {

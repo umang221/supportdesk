@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 export const NOTIFICATION_TYPES = [
+  "sla_approaching",
   "sla_critical",
   "sla_breached",
   "ticket_assigned",
