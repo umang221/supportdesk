@@ -22,14 +22,16 @@ function EmptyState() {
  * standing in for the network round-trip a real API-backed view would have.
  *
  * Status/priority/assignee edits and composed messages are lifted up to
- * AgentWorkspace as local, session-only state (`onStatusChange` etc.) — none
- * of it is persisted, since there's no backend yet.
+ * AgentWorkspace, which calls their real API endpoints and passes back the
+ * server's authoritative result (see AgentWorkspace's handleStatusChange/
+ * handlePriorityChange/handleAssigneeChange/handleAddMessage).
  */
 export function TicketDetail({
   ticket,
   customer,
   assignee,
   messages,
+  isMessagesLoading,
   agentsById,
   assignableAgents,
   now,
@@ -65,22 +67,14 @@ export function TicketDetail({
           onAssigneeChange={onAssigneeChange}
         />
         <TicketMetaPanel ticket={ticket} />
-        <TicketConversation messages={messages} customer={customer} agentsById={agentsById} now={now} />
+        {isMessagesLoading && messages.length === 0 ? (
+          <p className="p-space-lg text-body-sm text-text-tertiary">Loading conversation…</p>
+        ) : (
+          <TicketConversation messages={messages} customer={customer} agentsById={agentsById} now={now} />
+        )}
       </div>
 
-      <TicketComposer
-        onSubmit={({ body, isInternal }) =>
-          onAddMessage({
-            id: `draft-${ticket.id}-${Date.now()}`,
-            ticketId: ticket.id,
-            authorType: "agent",
-            authorName: "You",
-            body,
-            isInternal,
-            createdAt: new Date(now).toISOString(),
-          })
-        }
-      />
+      <TicketComposer onSubmit={onAddMessage} />
     </div>
   );
 }

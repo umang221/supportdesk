@@ -11,6 +11,7 @@ import { assertValidStatusTransition } from "@/server/services/ticketStateMachin
 import { isValidObjectId } from "@/server/validators/ticketValidators";
 import { computeInitialSla, recalcSlaOnPriorityChange, recalcSlaOnStatusChange, getLiveSlaState } from "@/server/services/slaService";
 import { publish, REALTIME_EVENTS } from "@/server/realtime/eventBus";
+import { sendTicketCreatedEmail, sendTicketResolvedEmail } from "@/server/email/emailService";
 
 const TICKET_NUMBER_PREFIX = "TCK-";
 const MAX_TICKET_NUMBER_ATTEMPTS = 5;
@@ -136,6 +137,7 @@ export async function createTicket(input) {
       });
       const created = presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)));
       publish(REALTIME_EVENTS.TICKET_UPDATED, created);
+      await sendTicketCreatedEmail(created);
       return created;
     } catch (error) {
       const isDuplicateTicketNumber = error?.code === 11000 && "ticketNumber" in (error?.keyPattern ?? {});
@@ -196,6 +198,9 @@ export async function transitionTicketStatus(id, nextStatus) {
   await ticket.save();
   const updated = presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)), now);
   publish(REALTIME_EVENTS.TICKET_UPDATED, updated);
+  if (nextStatus === STATUSES.RESOLVED) {
+    await sendTicketResolvedEmail(updated);
+  }
   return updated;
 }
 

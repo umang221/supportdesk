@@ -6,6 +6,16 @@ import { deriveActiveSlaState } from "@/server/services/slaService";
 import { getTicketById } from "@/server/services/ticketService";
 import { createNotification } from "@/server/services/notificationService";
 import { publish, REALTIME_EVENTS } from "@/server/realtime/eventBus";
+import { sendSlaApproachingEmail, sendSlaBreachedEmail } from "@/server/email/emailService";
+
+// Email is only sent for the two states the execution plan calls out
+// (approaching/breached) — "critical" still creates a notification (below)
+// but not a second email on top of the approaching one most tickets will
+// already have triggered on their way there.
+const SLA_EVENT_EMAIL = {
+  [SLA_STATES.APPROACHING]: sendSlaApproachingEmail,
+  [SLA_STATES.BREACHED]: sendSlaBreachedEmail,
+};
 
 // Tickets whose SLA countdown is actively running. on_hold/resolved/closed
 // tickets carry a "paused"/"completed" slaState instead (see
@@ -43,6 +53,10 @@ const SLA_NOTIFICATION_TYPE = {
  * sees the now-current stored state, finds no further transition, and
  * creates nothing. The job runner's overlap guard (jobRunner.js) also
  * prevents two sweeps from ever running at once.
+ *
+ * The same transition also drives the sla-approaching/sla-breached emails
+ * (server/email/emailService.js) — same idempotency guarantee, since it's
+ * gated on the identical state-change check.
  */
 export async function runSlaMonitorSweep() {
   await connectDB();
@@ -86,6 +100,13 @@ export async function runSlaMonitorSweep() {
     // Tickets with no assignee yet have no natural single recipient for an
     // SLA notification (no per-team broadcast exists) — the slaState is
     // still updated and broadcast above, just without a notification.
+
+    const sendEmailForState = SLA_EVENT_EMAIL[liveState];
+    if (sendEmailForState) {
+      // Uses `presented` (populated assignee) rather than the lean `ticket`
+      // doc from this query, which only has the assignee's raw id.
+      await sendEmailForState(presented);
+    }
   }
 
   return { checked, updated, notified, ranAt: now };

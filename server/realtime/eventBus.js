@@ -23,6 +23,7 @@ if (!bus) {
 export const REALTIME_EVENTS = {
   TICKET_UPDATED: "ticket:updated",
   NOTIFICATION_CREATED: "notification:created",
+  MESSAGE_CREATED: "message:created",
 };
 
 export function publish(event, payload) {

@@ -19,6 +19,12 @@ const HEARTBEAT_INTERVAL_MS = 25_000;
  *   notification:created events to its own session user before ever
  *   writing them to the stream — another user's notification content is
  *   never sent down this connection.
+ * - Messages (replies/internal notes) follow the same rule as tickets: any
+ *   authenticated agent/team_lead/admin can already read any ticket's full
+ *   message thread (there's no team-scoping on ticket visibility anywhere
+ *   in this app yet), so broadcasting message:created to every authenticated
+ *   connection matches, not loosens, that existing boundary. Customers have
+ *   no session that can reach this endpoint at all.
  */
 export async function GET(request) {
   const user = await getCurrentUser();
@@ -28,11 +34,13 @@ export async function GET(request) {
 
   let unsubscribeTicket;
   let unsubscribeNotification;
+  let unsubscribeMessage;
   let heartbeat;
 
   function cleanup() {
     unsubscribeTicket?.();
     unsubscribeNotification?.();
+    unsubscribeMessage?.();
     if (heartbeat) clearInterval(heartbeat);
   }
 
@@ -55,6 +63,10 @@ export async function GET(request) {
         if (String(notification.recipient) === String(user.id)) {
           send("notification:created", notification);
         }
+      });
+
+      unsubscribeMessage = subscribe(REALTIME_EVENTS.MESSAGE_CREATED, (message) => {
+        send("message:created", message);
       });
 
       // Keeps intermediary proxies/load balancers from timing out an idle

@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/Button";
 import { SendIcon, PaperclipIcon, NoteIcon } from "@/components/ui/icons";
 
 /**
- * Reply / internal-note composer. Submitting appends the message to
- * AgentWorkspace's in-memory draft state (see `onSubmit`) — it is not
- * persisted anywhere and resets on reload, since there's no backend yet.
- * The attachment control is presentational only for the same reason.
+ * Reply / internal-note composer. Submitting calls AgentWorkspace's
+ * handleAddMessage (see `onSubmit`), which posts to the real message API
+ * and triggers the corresponding reply email. The attachment control
+ * remains presentational only — file upload has a working backend
+ * (server/attachments/attachmentService.js) but no composer UI yet.
  */
 export function TicketComposer({ onSubmit }) {
   const [mode, setMode] = useState("reply");

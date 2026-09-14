@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WorkspaceLayout } from "@/components/layout/WorkspaceLayout";
-import { agents as mockAgents, getMessagesByTicketId } from "@/lib/mock-data";
+import { agents as mockAgents } from "@/lib/mock-data";
 import { fetchTickets, fetchUsers, updateTicketStatus, updateTicketPriority, assignTicket } from "@/lib/api/tickets";
-import { normalizeTicket, normalizeUser } from "@/lib/api/ticket-adapter";
+import { fetchTicketMessages, postTicketMessage } from "@/lib/api/messages";
+import { normalizeTicket, normalizeUser, normalizeMessage } from "@/lib/api/ticket-adapter";
 import { subscribeRealtime } from "@/lib/realtime/realtimeClient";
 import { TicketFilters } from "./TicketFilters";
 import { TicketQueue } from "./TicketQueue";
@@ -45,10 +46,14 @@ function matchesSearch(ticket, query) {
  * in sync with changes made elsewhere (another agent, another tab) without
  * a manual refresh, merged in alongside — not instead of — the REST flow.
  *
- * Message/conversation data has no backing API yet (out of scope for this
- * integration pass), so it's still read from the mock fixtures, joined by
- * `ticketNumber` — the seed script set every ticket's `ticketNumber` to its
- * corresponding mock ticket's id, so the join lines up.
+ * The conversation for the selected ticket is fetched from the real message
+ * API (server/services/messageService.js via app/api/tickets/[id]/messages)
+ * when selection changes, and a posted reply/note calls that same API — no
+ * more locally-only draft state. A live "message:created" SSE event (see
+ * lib/realtime/realtimeClient) appends any message posted elsewhere for the
+ * currently selected ticket; the POST response is also appended directly
+ * (deduped by id against whichever arrives first) so the sender sees their
+ * own message immediately even if the realtime event is briefly delayed.
  *
  * `initialNow` comes from the server (see app/tickets/page.js) and seeds the
  * `now` clock used for every relative-time/SLA-countdown calculation in this
@@ -66,8 +71,9 @@ export function AgentWorkspace({ initialNow }) {
   const [isListLoading, setIsListLoading] = useState(true);
   const [listError, setListError] = useState(null);
   const [actionError, setActionError] = useState(null);
-  // Session-only composed messages, never persisted: { [ticketId]: Message[] }
-  const [draftMessagesByTicket, setDraftMessagesByTicket] = useState({});
+  const [messages, setMessages] = useState([]);
+  const [isMessagesLoading, setIsMessagesLoading] = useState(true);
+  const selectedTicketIdRef = useRef(null);
 
   const loadTickets = useCallback(() => {
     return fetchTickets({ limit: TICKET_LIST_LIMIT })
@@ -125,6 +131,48 @@ export function AgentWorkspace({ initialNow }) {
     });
   }, []);
 
+  useEffect(() => {
+    selectedTicketIdRef.current = selectedTicketId;
+  }, [selectedTicketId]);
+
+  useEffect(() => {
+    // No ticket selected: nothing to fetch. `messages` is only ever read
+    // through `detailProps`, which omits it entirely when there's no
+    // selected ticket, so stale content sitting in state here is harmless
+    // until the next selection overwrites it.
+    if (!selectedTicketId) return undefined;
+
+    let cancelled = false;
+    fetchTicketMessages(selectedTicketId)
+      .then((data) => {
+        if (!cancelled) setMessages(data.messages.map(normalizeMessage));
+      })
+      .catch(() => {
+        // The conversation thread failing to load doesn't need its own
+        // error banner — the composer/ticket detail still work, it just
+        // shows an empty thread. actionError is reserved for actions the
+        // agent explicitly took.
+      })
+      .finally(() => {
+        if (!cancelled) setIsMessagesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedTicketId]);
+
+  // Live messages posted elsewhere (another agent, another tab) for
+  // whichever ticket is currently selected — read through a ref rather than
+  // closing over `selectedTicketId` directly, since this effect (like the
+  // other realtime subscriptions) only subscribes once on mount.
+  useEffect(() => {
+    return subscribeRealtime("message:created", (rawMessage) => {
+      if (rawMessage.ticketId !== selectedTicketIdRef.current) return;
+      const normalized = normalizeMessage(rawMessage);
+      setMessages((prev) => (prev.some((m) => m.id === normalized.id) ? prev : [...prev, normalized]));
+    });
+  }, []);
+
   const mockAgentsById = useMemo(() => new Map(mockAgents.map((a) => [a.id, a])), []);
 
   // Every ticket already carries its own populated customer/assignee, so
@@ -165,6 +213,7 @@ export function AgentWorkspace({ initialNow }) {
 
   function handleSelectTicket(ticketId) {
     setSelectedTicketId(ticketId);
+    setIsMessagesLoading(true);
     setActionError(null);
     setMobileDetailOpen(true);
   }
@@ -213,11 +262,15 @@ export function AgentWorkspace({ initialNow }) {
     }
   }
 
-  function handleAddMessage(ticketId, message) {
-    setDraftMessagesByTicket((prev) => ({
-      ...prev,
-      [ticketId]: [...(prev[ticketId] ?? []), message],
-    }));
+  async function handleAddMessage(ticketId, { body, isInternal }) {
+    try {
+      const { message } = await postTicketMessage(ticketId, { body, isInternal });
+      const normalized = normalizeMessage(message);
+      setMessages((prev) => (prev.some((m) => m.id === normalized.id) ? prev : [...prev, normalized]));
+      setActionError(null);
+    } catch (error) {
+      setActionError(error.message);
+    }
   }
 
   const detailProps = selectedTicket
@@ -225,17 +278,15 @@ export function AgentWorkspace({ initialNow }) {
         ticket: selectedTicket,
         customer: selectedTicket.customer,
         assignee: selectedTicket.assignee,
-        messages: [
-          ...getMessagesByTicketId(selectedTicket.ticketNumber),
-          ...(draftMessagesByTicket[selectedTicket.id] ?? []),
-        ],
+        messages,
+        isMessagesLoading,
         agentsById: mockAgentsById,
         assignableAgents,
         error: actionError,
         onStatusChange: handleStatusChange,
         onPriorityChange: handlePriorityChange,
         onAssigneeChange: handleAssigneeChange,
-        onAddMessage: (message) => handleAddMessage(selectedTicket.id, message),
+        onAddMessage: (payload) => handleAddMessage(selectedTicket.id, payload),
       }
     : { ticket: null };
 
