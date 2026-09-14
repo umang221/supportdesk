@@ -1,47 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import { formatRelativeTime } from "@/lib/utils/format-relative-time";
 import { fetchNotifications, markNotificationRead } from "@/lib/api/notifications";
+import { subscribeRealtime } from "@/lib/realtime/realtimeClient";
 import { BellIcon } from "@/components/ui/icons";
 
 const NOTIFICATION_LIST_LIMIT = 20;
 
 /**
  * Bell button + dropdown panel showing the current user's own notifications
- * (scoped server-side by session, see /api/notifications). Fetches lazily
- * on first open rather than on every page load, since most pages never open
- * it. Foundation only: no realtime/polling — the badge only refreshes when
- * the panel is opened.
+ * (scoped server-side by session, see /api/notifications). Loads once on
+ * mount via REST (the source of truth) and then stays live via the
+ * /api/realtime SSE stream (see lib/realtime/realtimeClient) — a new
+ * notification for this user is pushed in and prepended without the panel
+ * needing to be open or the page reloaded.
  */
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [now, setNow] = useState(null);
 
   function load() {
-    setIsLoading(true);
-    setError(null);
     fetchNotifications({ limit: NOTIFICATION_LIST_LIMIT })
       .then((data) => {
         setNotifications(data.notifications);
         setUnreadCount(data.unreadCount);
         setNow(Date.now());
-        setHasLoaded(true);
+        setError(null);
       })
       .catch((err) => setError(err.message))
       .finally(() => setIsLoading(false));
   }
 
+  useEffect(() => {
+    load();
+  }, []);
+
+  useEffect(() => {
+    return subscribeRealtime("notification:created", (notification) => {
+      setNotifications((list) => [notification, ...list]);
+      setUnreadCount((count) => count + 1);
+      setNow(Date.now());
+    });
+  }, []);
+
+  function handleRetry() {
+    setIsLoading(true);
+    setError(null);
+    load();
+  }
+
   function handleToggle() {
-    const willOpen = !isOpen;
-    setIsOpen(willOpen);
-    if (willOpen && !hasLoaded && !isLoading) load();
+    setIsOpen((open) => !open);
   }
 
   async function handleMarkRead(id) {
@@ -96,7 +111,7 @@ export function NotificationBell() {
                   <p className="text-body-sm text-text-tertiary">{error}</p>
                   <button
                     type="button"
-                    onClick={load}
+                    onClick={handleRetry}
                     className="mt-2 text-label-sm font-medium text-primary hover:underline"
                   >
                     Try again

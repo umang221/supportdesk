@@ -1,9 +1,26 @@
 import { connectDB } from "@/server/utils/db";
 import Notification from "@/server/models/Notification";
 import { isValidObjectId } from "@/server/validators/ticketValidators";
+import { publish, REALTIME_EVENTS } from "@/server/realtime/eventBus";
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 50;
+
+/**
+ * Creates a notification and publishes it for realtime delivery. Not yet
+ * wired to any trigger (ticket assignment, SLA breach, etc.) or exposed via
+ * an API route — those triggers are a later Task 16 part. This exists now
+ * as the primitive the realtime pipeline needs to have something to send.
+ */
+export async function createNotification({ type, message, recipient, relatedTicket }) {
+  await connectDB();
+
+  const notification = await Notification.create({ type, message, recipient, relatedTicket });
+  const populated = await notification.populate("relatedTicket", "ticketNumber subject");
+
+  publish(REALTIME_EVENTS.NOTIFICATION_CREATED, populated.toObject());
+  return populated;
+}
 
 /**
  * Lists the given recipient's notifications, newest first, alongside their

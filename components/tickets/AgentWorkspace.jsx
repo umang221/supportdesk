@@ -5,6 +5,7 @@ import { WorkspaceLayout } from "@/components/layout/WorkspaceLayout";
 import { agents as mockAgents, getMessagesByTicketId } from "@/lib/mock-data";
 import { fetchTickets, fetchUsers, updateTicketStatus, updateTicketPriority, assignTicket } from "@/lib/api/tickets";
 import { normalizeTicket, normalizeUser } from "@/lib/api/ticket-adapter";
+import { subscribeRealtime } from "@/lib/realtime/realtimeClient";
 import { TicketFilters } from "./TicketFilters";
 import { TicketQueue } from "./TicketQueue";
 import { TicketDetail } from "./TicketDetail";
@@ -40,6 +41,9 @@ function matchesSearch(ticket, query) {
  * — status/priority/assignment edits call their dedicated API endpoints and
  * apply the server's authoritative result (including recalculated SLA
  * state) back into local state; they are never applied optimistically only.
+ * A live SSE subscription (see lib/realtime/realtimeClient) keeps the queue
+ * in sync with changes made elsewhere (another agent, another tab) without
+ * a manual refresh, merged in alongside — not instead of — the REST flow.
  *
  * Message/conversation data has no backing API yet (out of scope for this
  * integration pass), so it's still read from the mock fixtures, joined by
@@ -104,6 +108,21 @@ export function AgentWorkspace({ initialNow }) {
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), CLOCK_TICK_MS);
     return () => clearInterval(id);
+  }, []);
+
+  // Live updates from other agents/other tabs (see app/api/realtime and
+  // lib/realtime/realtimeClient). Merges into the existing list by id rather
+  // than reloading, so selection/filters/search/draft messages are left
+  // untouched. REST remains the source of truth for every mutation this
+  // workspace itself makes — this only picks up changes made elsewhere.
+  useEffect(() => {
+    return subscribeRealtime("ticket:updated", (rawTicket) => {
+      const updated = normalizeTicket(rawTicket);
+      setTickets((prev) => {
+        const exists = prev.some((t) => t.id === updated.id);
+        return exists ? prev.map((t) => (t.id === updated.id ? updated : t)) : [updated, ...prev];
+      });
+    });
   }, []);
 
   const mockAgentsById = useMemo(() => new Map(mockAgents.map((a) => [a.id, a])), []);

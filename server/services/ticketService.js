@@ -10,6 +10,7 @@ import { hasRole } from "@/lib/auth/authorization";
 import { assertValidStatusTransition } from "@/server/services/ticketStateMachine";
 import { isValidObjectId } from "@/server/validators/ticketValidators";
 import { computeInitialSla, recalcSlaOnPriorityChange, recalcSlaOnStatusChange, getLiveSlaState } from "@/server/services/slaService";
+import { publish, REALTIME_EVENTS } from "@/server/realtime/eventBus";
 
 const TICKET_NUMBER_PREFIX = "TCK-";
 const MAX_TICKET_NUMBER_ATTEMPTS = 5;
@@ -133,7 +134,9 @@ export async function createTicket(input) {
         dueAt,
         slaState,
       });
-      return presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)));
+      const created = presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)));
+      publish(REALTIME_EVENTS.TICKET_UPDATED, created);
+      return created;
     } catch (error) {
       const isDuplicateTicketNumber = error?.code === 11000 && "ticketNumber" in (error?.keyPattern ?? {});
       if (!isDuplicateTicketNumber || attempt === MAX_TICKET_NUMBER_ATTEMPTS - 1) throw error;
@@ -167,7 +170,9 @@ export async function updateTicket(id, patch) {
   const ticket = await populateTicketRefs(
     Ticket.findByIdAndUpdate(id, { $set: update }, { new: true, runValidators: true })
   );
-  return presentTicket(ticket);
+  const updated = presentTicket(ticket);
+  if (updated) publish(REALTIME_EVENTS.TICKET_UPDATED, updated);
+  return updated;
 }
 
 /**
@@ -189,7 +194,9 @@ export async function transitionTicketStatus(id, nextStatus) {
   ticket.status = nextStatus;
   ticket.slaState = slaState;
   await ticket.save();
-  return presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)), now);
+  const updated = presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)), now);
+  publish(REALTIME_EVENTS.TICKET_UPDATED, updated);
+  return updated;
 }
 
 /**
@@ -229,5 +236,7 @@ export async function assignTicket(id, { assigneeId, actingUser }) {
 
   ticket.assignee = assigneeId;
   await ticket.save();
-  return presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)));
+  const updated = presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)));
+  publish(REALTIME_EVENTS.TICKET_UPDATED, updated);
+  return updated;
 }
