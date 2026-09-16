@@ -37,14 +37,26 @@ export async function listMessagesForTicket(ticketId) {
 }
 
 /**
+ * Same as listMessagesForTicket, but strips internal notes before returning
+ * — the customer-facing equivalent, used by the portal message route/page.
+ * Filtering happens here (not left to the route or page) so a customer can
+ * never see internal_note content no matter which caller forgets to filter.
+ * Returns null under the same conditions as listMessagesForTicket.
+ */
+export async function listMessagesForCustomerTicket(ticketId) {
+  const messages = await listMessagesForTicket(ticketId);
+  if (!messages) return null;
+  return messages.filter((message) => message.type !== "internal_note");
+}
+
+/**
  * Creates a message on a ticket and fires its corresponding email event.
  * `authorId`/`authorModel` are derived by the caller from the session, not
- * from client input (see app/api/tickets/[id]/messages/route.js) — only
- * "User" authors (agents/team leads/admins) can post through that route
- * today, since there is no customer-facing session yet
- * (lib/portal/current-customer.js). `authorModel: "Customer"` is still
- * supported here at the service layer so the customer-reply email trigger
- * needs no changes once customer-side posting exists.
+ * from client input — see app/api/tickets/[id]/messages/route.js (User
+ * authors, any authenticated agent/team_lead/admin) and
+ * app/api/portal/tickets/[id]/messages/route.js (Customer authors, the
+ * session customer, and always isInternal:false — a customer can never
+ * create an internal note).
  *
  * Returns null if the ticket doesn't exist.
  */

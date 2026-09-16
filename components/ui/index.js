@@ -5,4 +5,5 @@ export { SlaIndicator } from "./SlaIndicator";
 export { Card } from "./Card";
 export { TableHeaderCell, TableRow, TableCell } from "./Table";
 export { Avatar } from "./Avatar";
+export { AttachmentFileList } from "./AttachmentFileList";
 export * from "./icons";

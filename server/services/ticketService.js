@@ -87,6 +87,23 @@ export async function getTicketById(id) {
   return presentTicket(ticket);
 }
 
+/**
+ * Fetches a ticket only if it belongs to the given customer — the shared
+ * ownership check for every customer-facing ticket sub-resource (messages,
+ * attachments), so it lives in one tested place instead of being
+ * re-implemented per route. Returns null both when the ticket doesn't exist
+ * and when it exists but belongs to someone else — deliberately
+ * indistinguishable, so a caller maps both to a 404 without ever confirming
+ * that another customer's ticket id is valid.
+ */
+export async function getTicketForCustomer(id, customerId) {
+  const ticket = await getTicketById(id);
+  if (!ticket) return null;
+  const ownerId = ticket.customer?._id ?? ticket.customer;
+  if (!ownerId || String(ownerId) !== String(customerId)) return null;
+  return ticket;
+}
+
 async function generateTicketNumber() {
   const latest = await Ticket.findOne({ ticketNumber: new RegExp(`^${TICKET_NUMBER_PREFIX}\\d+$`) })
     .sort({ ticketNumber: -1 })

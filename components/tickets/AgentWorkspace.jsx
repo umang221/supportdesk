@@ -272,9 +272,9 @@ export function AgentWorkspace({ initialNow }) {
     }
   }
 
-  async function handleAddMessage(ticketId, { body, isInternal }) {
+  async function handleAddMessage(ticketId, { body, isInternal, attachments }) {
     try {
-      const { message } = await postTicketMessage(ticketId, { body, isInternal });
+      const { message } = await postTicketMessage(ticketId, { body, isInternal, attachments });
       const normalized = normalizeMessage(message);
       setMessages((prev) => (prev.some((m) => m.id === normalized.id) ? prev : [...prev, normalized]));
       setActionError(null);

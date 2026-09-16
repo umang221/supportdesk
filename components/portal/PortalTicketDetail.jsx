@@ -9,6 +9,8 @@ import { PRIORITY_LIST } from "@/lib/constants/priorities";
 import { formatSlaCountdown } from "@/lib/utils/format-sla-countdown";
 import { useLiveNow } from "@/lib/hooks/use-live-now";
 import { TicketConversation, TicketMetaPanel } from "@/components/tickets";
+import { postPortalMessage } from "@/lib/api/portal";
+import { normalizeMessage } from "@/lib/api/ticket-adapter";
 import { PortalReplyComposer } from "./PortalReplyComposer";
 
 function findMeta(list, value) {
@@ -20,29 +22,28 @@ const CLOSED_STATUSES = new Set(["resolved", "closed"]);
 /**
  * Customer's read-only view of a single ticket: status/priority/SLA are
  * shown, never editable (those transitions are agent-only). Internal notes
- * are excluded before this component ever sees the message list — see
- * app/portal/tickets/[id]/page.js — so there's no risk of leaking them here.
+ * are excluded before this component ever sees the message list — filtered
+ * server-side in messageService.listMessagesForCustomerTicket — so there's
+ * no risk of leaking them here even if a reply later refetches messages.
  */
-export function PortalTicketDetail({ ticket, customer, assignee, team, messages, agentsById, initialNow }) {
+export function PortalTicketDetail({ ticket, customer, assignee, team, messages: initialMessages, initialNow }) {
   const now = useLiveNow(initialNow);
-  const [draftMessages, setDraftMessages] = useState([]);
+  const [messages, setMessages] = useState(initialMessages);
+  const [replyError, setReplyError] = useState(null);
   const statusMeta = findMeta(STATUS_LIST, ticket.status);
   const priorityMeta = findMeta(PRIORITY_LIST, ticket.priority);
   const sla = formatSlaCountdown(ticket, now);
   const isClosed = CLOSED_STATUSES.has(ticket.status);
 
-  function handleReply(body) {
-    setDraftMessages((prev) => [
-      ...prev,
-      {
-        id: `portal-draft-${ticket.id}-${Date.now()}`,
-        ticketId: ticket.id,
-        authorType: "customer",
-        authorId: customer?.id,
-        body,
-        createdAt: new Date(now).toISOString(),
-      },
-    ]);
+  async function handleReply({ body, attachments }) {
+    try {
+      const { message } = await postPortalMessage(ticket.id, { body, attachments });
+      const normalized = normalizeMessage(message);
+      setMessages((prev) => (prev.some((m) => m.id === normalized.id) ? prev : [...prev, normalized]));
+      setReplyError(null);
+    } catch (error) {
+      setReplyError(error.message || "Unable to send your reply.");
+    }
   }
 
   return (
@@ -86,14 +87,15 @@ export function PortalTicketDetail({ ticket, customer, assignee, team, messages,
 
         <TicketMetaPanel ticket={ticket} />
 
-        <TicketConversation
-          messages={[...messages, ...draftMessages]}
-          customer={customer}
-          agentsById={agentsById}
-          now={now}
-        />
+        <TicketConversation messages={messages} customer={customer} now={now} />
 
-        <PortalReplyComposer onSubmit={handleReply} />
+        {replyError ? (
+          <p role="alert" className="px-space-lg pb-2 text-label-sm text-sla-critical-text">
+            {replyError}
+          </p>
+        ) : null}
+
+        <PortalReplyComposer ticketId={ticket.id} onSubmit={handleReply} />
       </div>
     </div>
   );

@@ -1,14 +1,18 @@
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/Button";
+import { AttachmentFileList } from "@/components/ui/AttachmentFileList";
 import { SendIcon, PaperclipIcon, NoteIcon } from "@/components/ui/icons";
+import { uploadTicketAttachment } from "@/lib/api/messages";
+import { useAttachmentUpload } from "@/lib/hooks/use-attachment-upload";
+import { ATTACHMENT_ACCEPT, MAX_ATTACHMENTS_PER_MESSAGE } from "@/lib/constants/attachments";
 
 /**
  * Reply / internal-note composer. Submitting calls AgentWorkspace's
  * handleAddMessage (see `onSubmit`), which posts to the real message API
- * and triggers the corresponding reply email. The attachment control
- * remains presentational only — file upload has a working backend
- * (server/attachments/attachmentService.js) but no composer UI yet.
+ * and triggers the corresponding reply email. Attachments upload
+ * immediately on selection (see useAttachmentUpload) — this composer only
+ * sends the resulting metadata, never a raw file, on submit.
  *
  * `draftReply` optionally seeds the body from TicketAiPanel's "Use as
  * reply" action (see AgentWorkspace's aiDraftReply state). TicketDetail
@@ -17,17 +21,31 @@ import { SendIcon, PaperclipIcon, NoteIcon } from "@/components/ui/icons";
  * initial state, not an effect, since this is "reset the component to a
  * new starting value" rather than "synchronize with an external system".
  */
-export function TicketComposer({ onSubmit, draftReply }) {
+export function TicketComposer({ ticketId, onSubmit, draftReply }) {
   const [mode, setMode] = useState("reply");
   const [body, setBody] = useState(() => draftReply?.text ?? "");
   const isNote = mode === "note";
+  const fileInputId = useId();
+  const fileInputRef = useRef(null);
+  const { files, addFiles, removeFile, reset: resetFiles, attachments, isUploading } = useAttachmentUpload(uploadTicketAttachment);
+
+  const canAddMoreFiles = files.length < MAX_ATTACHMENTS_PER_MESSAGE;
+
+  function handleFileChange(event) {
+    const selected = event.target.files;
+    if (selected && selected.length > 0) {
+      addFiles(selected, ticketId);
+    }
+    event.target.value = "";
+  }
 
   function handleSubmit(event) {
     event.preventDefault();
     const trimmed = body.trim();
-    if (!trimmed) return;
-    onSubmit({ body: trimmed, isInternal: isNote });
+    if (!trimmed || isUploading) return;
+    onSubmit({ body: trimmed, isInternal: isNote, attachments });
     setBody("");
+    resetFiles();
   }
 
   return (
@@ -83,18 +101,32 @@ export function TicketComposer({ onSubmit, draftReply }) {
         )}
       />
 
-      <div className="mt-2 flex items-center justify-between">
-        <button
-          type="button"
-          disabled
-          aria-label="Attach a file"
-          title="Attachments aren't available yet"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-tertiary disabled:cursor-not-allowed"
-        >
-          <PaperclipIcon className="h-4 w-4" />
-        </button>
+      <AttachmentFileList files={files} onRemove={removeFile} />
 
-        <Button type="submit" size="compact" disabled={!body.trim()}>
+      <div className="mt-2 flex items-center justify-between">
+        <div>
+          <input
+            id={fileInputId}
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept={ATTACHMENT_ACCEPT}
+            onChange={handleFileChange}
+            className="sr-only"
+          />
+          <button
+            type="button"
+            disabled={!canAddMoreFiles}
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Attach a file"
+            title={canAddMoreFiles ? "Attach a file" : `A message may have at most ${MAX_ATTACHMENTS_PER_MESSAGE} attachments`}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-secondary hover:bg-surface-hover hover:text-text-primary disabled:cursor-not-allowed disabled:text-text-tertiary disabled:hover:bg-transparent"
+          >
+            <PaperclipIcon className="h-4 w-4" />
+          </button>
+        </div>
+
+        <Button type="submit" size="compact" disabled={!body.trim() || isUploading}>
           <SendIcon className="h-4 w-4" />
           {isNote ? "Add note" : "Send reply"}
         </Button>

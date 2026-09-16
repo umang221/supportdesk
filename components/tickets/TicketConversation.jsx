@@ -1,7 +1,54 @@
 import { cn } from "@/lib/utils/cn";
 import { Avatar } from "@/components/ui/Avatar";
+import { PaperclipIcon } from "@/components/ui/icons";
 import { formatRelativeTime } from "@/lib/utils/format-relative-time";
 import { formatDateTime } from "@/lib/utils/format-datetime";
+import { formatFileSize } from "@/lib/utils/format-file-size";
+
+/**
+ * One message's attachments — an image renders as a clickable thumbnail
+ * (opens the full-size signed URL in a new tab), anything else (PDF, plain
+ * text) as a filename/size chip with a download link. `url` is always a
+ * fresh, short-lived signed URL from the server (see
+ * messageService.presentMessage) — never persisted, never guessable.
+ */
+function MessageAttachments({ attachments }) {
+  if (!attachments || attachments.length === 0) return null;
+
+  return (
+    <ul className="mt-2 flex flex-wrap gap-2">
+      {attachments.map((attachment) => (
+        <li key={attachment.publicId}>
+          {attachment.resourceType === "image" ? (
+            <a href={attachment.url} target="_blank" rel="noopener noreferrer" className="block">
+              {/* next/image isn't a fit here: this URL is a signed, ~5-minute-lived
+                  Cloudinary link (see attachmentService.getSignedAttachmentUrl),
+                  regenerated fresh on every render — not a stable asset worth its
+                  remote-pattern config or optimizer cache. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={attachment.url}
+                alt={attachment.filename}
+                className="h-20 w-20 rounded-md border border-border-subtle object-cover"
+              />
+            </a>
+          ) : (
+            <a
+              href={attachment.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-label-sm text-text-primary hover:bg-surface-hover"
+            >
+              <PaperclipIcon className="h-3.5 w-3.5 text-text-tertiary" />
+              <span className="max-w-40 truncate">{attachment.filename}</span>
+              <span className="text-text-tertiary">{formatFileSize(attachment.size)}</span>
+            </a>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 /**
  * Message thread for the selected ticket, oldest first. Customer replies,
@@ -60,6 +107,7 @@ export function TicketConversation({ messages, customer, agentsById, now }) {
                 </span>
               </div>
               <p className="whitespace-pre-wrap text-body-sm text-text-primary">{message.body}</p>
+              <MessageAttachments attachments={message.attachments} />
             </div>
           </li>
         );

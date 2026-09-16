@@ -1,21 +1,44 @@
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { AttachmentFileList } from "@/components/ui/AttachmentFileList";
 import { SendIcon, PaperclipIcon } from "@/components/ui/icons";
+import { uploadPortalTicketAttachment } from "@/lib/api/portal";
+import { useAttachmentUpload } from "@/lib/hooks/use-attachment-upload";
+import { ATTACHMENT_ACCEPT, MAX_ATTACHMENTS_PER_MESSAGE } from "@/lib/constants/attachments";
 
 /**
  * Customer-facing reply box — a single mode (no internal-note tab, that's an
- * agent-only concept). Submitting appends to the page's local message state
- * (see PortalTicketDetail); nothing is persisted, since there's no backend.
+ * agent-only concept). Submitting posts a real message via PortalTicketDetail's
+ * handleReply (see app/api/portal/tickets/[id]/messages). Attachments upload
+ * immediately on selection, same flow as TicketComposer's (agent) — see
+ * lib/hooks/use-attachment-upload.js.
  */
-export function PortalReplyComposer({ onSubmit }) {
+export function PortalReplyComposer({ ticketId, onSubmit }) {
   const [body, setBody] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const fileInputId = useId();
+  const fileInputRef = useRef(null);
+  const { files, addFiles, removeFile, reset: resetFiles, attachments, isUploading } = useAttachmentUpload(uploadPortalTicketAttachment);
 
-  function handleSubmit(event) {
+  const canAddMoreFiles = files.length < MAX_ATTACHMENTS_PER_MESSAGE;
+
+  function handleFileChange(event) {
+    const selected = event.target.files;
+    if (selected && selected.length > 0) {
+      addFiles(selected, ticketId);
+    }
+    event.target.value = "";
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
     const trimmed = body.trim();
-    if (!trimmed) return;
-    onSubmit(trimmed);
+    if (!trimmed || isUploading) return;
+    setSubmitting(true);
+    await onSubmit({ body: trimmed, attachments });
     setBody("");
+    resetFiles();
+    setSubmitting(false);
   }
 
   return (
@@ -32,20 +55,34 @@ export function PortalReplyComposer({ onSubmit }) {
         className="w-full resize-none rounded-lg border border-border-subtle bg-canvas-bg p-space-sm text-body-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-accent-subtle"
       />
 
-      <div className="mt-2 flex items-center justify-between">
-        <button
-          type="button"
-          disabled
-          aria-label="Attach a file"
-          title="Attachments aren't available yet"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-tertiary disabled:cursor-not-allowed"
-        >
-          <PaperclipIcon className="h-4 w-4" />
-        </button>
+      <AttachmentFileList files={files} onRemove={removeFile} />
 
-        <Button type="submit" size="compact" disabled={!body.trim()}>
+      <div className="mt-2 flex items-center justify-between">
+        <div>
+          <input
+            id={fileInputId}
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept={ATTACHMENT_ACCEPT}
+            onChange={handleFileChange}
+            className="sr-only"
+          />
+          <button
+            type="button"
+            disabled={!canAddMoreFiles}
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Attach a file"
+            title={canAddMoreFiles ? "Attach a file" : `A message may have at most ${MAX_ATTACHMENTS_PER_MESSAGE} attachments`}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-secondary hover:bg-surface-hover hover:text-text-primary disabled:cursor-not-allowed disabled:text-text-tertiary disabled:hover:bg-transparent"
+          >
+            <PaperclipIcon className="h-4 w-4" />
+          </button>
+        </div>
+
+        <Button type="submit" size="compact" disabled={!body.trim() || submitting || isUploading}>
           <SendIcon className="h-4 w-4" />
-          Send reply
+          {submitting ? "Sending..." : "Send reply"}
         </Button>
       </div>
     </form>

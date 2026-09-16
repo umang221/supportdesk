@@ -83,7 +83,12 @@ export function TicketDetail({
         )}
       </div>
 
-      <TicketComposer key={draftReply?.token ?? "default"} onSubmit={onAddMessage} draftReply={draftReply} />
+      <TicketComposer
+        key={draftReply?.token ?? "default"}
+        ticketId={ticket.id}
+        onSubmit={onAddMessage}
+        draftReply={draftReply}
+      />
     </div>
   );
 }
