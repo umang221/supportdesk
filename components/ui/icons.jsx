@@ -45,15 +45,6 @@ export function CustomersIcon(props) {
   );
 }
 
-export function KnowledgeIcon(props) {
-  return (
-    <IconBase {...props}>
-      <path d="M12 6.5c-1.6-1.3-4-2-7-2v12.5c3 0 5.4.7 7 2 1.6-1.3 4-2 7-2V4.5c-3 0-5.4.7-7 2Z" />
-      <path d="M12 6.5v12.5" />
-    </IconBase>
-  );
-}
-
 export function AnalyticsIcon(props) {
   return (
     <IconBase {...props}>
@@ -106,17 +97,6 @@ export function BellIcon(props) {
     <IconBase {...props}>
       <path d="M6 8.5a6 6 0 0 1 12 0c0 4.2 1.4 5.7 2 6.5H4c.6-.8 2-2.3 2-6.5Z" />
       <path d="M10 18a2 2 0 0 0 4 0" />
-    </IconBase>
-  );
-}
-
-export function HelpIcon(props) {
-  return (
-    <IconBase {...props}>
-      <circle cx="12" cy="12" r="9" />
-      <text x="12" y="16" textAnchor="middle" fontSize="11" fontWeight="600" fontFamily="sans-serif" stroke="none" fill="currentColor">
-        ?
-      </text>
     </IconBase>
   );
 }

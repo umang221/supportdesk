@@ -195,7 +195,7 @@ export function AdminTicketsSla({ tickets, teams, customersById, teamsById, agen
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <Avatar name={assignee?.name} size="sm" />
+                        <Avatar name={assignee?.name} src={assignee?.avatarUrl} size="sm" />
                         <span className="truncate text-body-sm">{assignee?.name ?? "Unassigned"}</span>
                       </div>
                     </TableCell>

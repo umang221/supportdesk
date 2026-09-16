@@ -3,12 +3,24 @@ import { getCurrentCustomer } from "@/lib/portal/current-customer";
 import { uploadAvatar } from "@/server/attachments/avatarService";
 import { updateOwnAvatar } from "@/server/services/customerAuthService";
 import { toErrorResponse } from "@/server/utils/http-error";
+import { checkRateLimit } from "@/server/utils/rateLimit";
+
+// Same reasoning as app/api/users/me/avatar/route.js's AVATAR_UPLOAD_RATE_LIMIT.
+export const AVATAR_UPLOAD_RATE_LIMIT = { windowMs: 15 * 60 * 1000, max: 10 };
 
 /** Uploads a new avatar for the signed-in customer and persists its URL. */
 export async function POST(request) {
   const customer = await getCurrentCustomer();
   if (!customer) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  }
+
+  const { allowed, retryAfterMs } = checkRateLimit(`avatar-upload:customer:${customer.id}`, AVATAR_UPLOAD_RATE_LIMIT);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many uploads. Please try again later.", code: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+    );
   }
 
   let formData;

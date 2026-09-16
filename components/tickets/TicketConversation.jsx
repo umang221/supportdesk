@@ -72,10 +72,12 @@ export function TicketConversation({ messages, customer, agentsById, now }) {
         const isAgent = message.authorType === "agent";
         const isInternal = Boolean(message.isInternal);
         const authorName = message.authorName ?? (isAgent ? agentsById.get(message.authorId)?.name : customer?.name);
+        const authorAvatarUrl =
+          message.authorAvatarUrl ?? (isAgent ? agentsById.get(message.authorId)?.avatarUrl : customer?.avatarUrl);
 
         return (
           <li key={message.id} className="flex gap-3">
-            <Avatar name={authorName} size="sm" className="mt-0.5 shrink-0" />
+            <Avatar name={authorName} src={authorAvatarUrl} size="sm" className="mt-0.5 shrink-0" />
             <div
               className={cn(
                 "min-w-0 flex-1 rounded-lg border p-space-md",

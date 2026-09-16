@@ -39,7 +39,7 @@ export function TicketRow({ ticket, customer, assignee, selected, onSelect, now 
       </TableCell>
       <TableCell className="whitespace-nowrap">
         <div className="flex items-center gap-2">
-          <Avatar name={assignee?.name} size="sm" />
+          <Avatar name={assignee?.name} src={assignee?.avatarUrl} size="sm" />
           <span className={cn("truncate text-body-sm", !assignee && "text-text-tertiary italic")}>
             {assignee?.name ?? "Unassigned"}
           </span>

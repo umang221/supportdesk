@@ -18,8 +18,13 @@ implementation; this file is a durable summary, not a replacement).
   services/models/validators (`server/`).
 - Auth: secure HTTP-only session cookies, verified server-side. Do not
   introduce JWT unless a concrete requirement later makes it necessary.
-- Attachment storage (S3 vs Cloudinary) is intentionally undecided — do not
-  pick until attachment work actually starts.
+- Attachment/avatar storage: Cloudinary (decided and implemented — see
+  `server/attachments/`). Ticket attachments use `type: "authenticated"`
+  delivery with short-lived signed URLs regenerated on every read
+  (`attachmentService.js`); avatars use standard public delivery with a
+  deterministic per-owner `public_id` (`avatarService.js`) since a profile
+  picture isn't sensitive content and needs a stable, directly-usable URL.
+  Both share config/env-var validation via `cloudinaryConfig.js`.
 
 ## UI / Design
 

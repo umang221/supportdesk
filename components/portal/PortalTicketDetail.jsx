@@ -76,7 +76,7 @@ export function PortalTicketDetail({ ticket, customer, assignee, team, messages:
         </div>
 
         <div className="flex items-center gap-2 border-b border-border-subtle p-space-lg">
-          <Avatar name={assignee?.name} size="sm" />
+          <Avatar name={assignee?.name} src={assignee?.avatarUrl} size="sm" />
           <div className="min-w-0">
             <p className="truncate text-body-sm text-text-primary">
               {assignee ? assignee.name : "Not yet assigned"}

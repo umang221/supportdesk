@@ -221,7 +221,7 @@ export function AdminAgents({ agents: initialAgents, teams, tickets }) {
                   <TableRow key={agent.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Avatar name={agent.name} size="sm" />
+                        <Avatar name={agent.name} src={agent.avatarUrl} size="sm" />
                         <div className="min-w-0">
                           <p className="truncate text-body-sm font-medium text-text-primary">{agent.name}</p>
                           <p className="truncate text-label-sm text-text-tertiary">{agent.email}</p>

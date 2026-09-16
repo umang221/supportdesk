@@ -35,7 +35,7 @@ function TeamCard({ team, teamAgents, teamTickets }) {
         ) : (
           teamAgents.map((agent) => (
             <div key={agent.id} className="flex items-center gap-2">
-              <Avatar name={agent.name} size="sm" />
+              <Avatar name={agent.name} src={agent.avatarUrl} size="sm" />
               <div className="min-w-0">
                 <p className="truncate text-body-sm text-text-primary">{agent.name}</p>
                 <p className="truncate text-label-sm text-text-tertiary">{agent.title}</p>

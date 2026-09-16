@@ -16,7 +16,7 @@ export function TicketCustomerPanel({ customer }) {
       <h3 className="text-label-sm font-medium text-text-secondary">Customer</h3>
 
       <div className="flex items-center gap-2">
-        <Avatar name={customer.name} />
+        <Avatar name={customer.name} src={customer.avatarUrl} />
         <div className="min-w-0">
           <p className="truncate text-body-sm font-medium text-text-primary">{customer.name}</p>
           <p className="truncate text-label-sm text-text-tertiary">

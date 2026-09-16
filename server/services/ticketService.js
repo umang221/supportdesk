@@ -23,9 +23,9 @@ const MAX_PAGE_SIZE = 100;
 
 function populateTicketRefs(query) {
   return query
-    .populate("customer", "name email company")
+    .populate("customer", "name email company avatarUrl")
     .populate("team", "name")
-    .populate("assignee", "name email");
+    .populate("assignee", "name email avatarUrl");
 }
 
 /**

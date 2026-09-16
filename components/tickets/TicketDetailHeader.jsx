@@ -6,8 +6,9 @@ import { formatSlaCountdown } from "@/lib/utils/format-sla-countdown";
 
 /**
  * Ticket header: ID/subject plus the status and priority controls. These
- * selects update local workspace state only (see AgentWorkspace's
- * `ticketOverrides`) — there's no backend yet to persist a real transition.
+ * selects call real, persisted API routes (see AgentWorkspace's
+ * handleStatusChange/handlePriorityChange, which call
+ * ticketService.transitionTicketStatus/updateTicket) — not just local state.
  */
 export function TicketDetailHeader({ ticket, now, error, onStatusChange, onPriorityChange, onClose }) {
   const sla = formatSlaCountdown(ticket, now);

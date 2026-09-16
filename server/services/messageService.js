@@ -32,7 +32,7 @@ export async function listMessagesForTicket(ticketId) {
   const ticketExists = await Ticket.exists({ _id: ticketId });
   if (!ticketExists) return null;
 
-  const messages = await Message.find({ ticket: ticketId }).sort({ createdAt: 1 }).populate("author", "name email");
+  const messages = await Message.find({ ticket: ticketId }).sort({ createdAt: 1 }).populate("author", "name email avatarUrl");
   return messages.map(presentMessage);
 }
 
@@ -78,7 +78,7 @@ export async function createMessage({ ticketId, authorId, authorModel, body, isI
   }
 
   const created = await Message.create({ ticket: ticket._id, author: authorId, authorModel, body, type, attachments });
-  const populated = await created.populate("author", "name email");
+  const populated = await created.populate("author", "name email avatarUrl");
   const presented = presentMessage(populated);
 
   publish(REALTIME_EVENTS.MESSAGE_CREATED, { ticketId: ticket._id.toString(), ...presented });

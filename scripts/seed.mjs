@@ -33,7 +33,6 @@ const { default: User } = await import("../server/models/User.js");
 const { default: Customer } = await import("../server/models/Customer.js");
 const { default: Ticket } = await import("../server/models/Ticket.js");
 const { default: Message } = await import("../server/models/Message.js");
-const { default: KnowledgeArticle } = await import("../server/models/KnowledgeArticle.js");
 const { default: Notification } = await import("../server/models/Notification.js");
 
 const { teams } = await import("../lib/mock-data/teams.js");
@@ -41,7 +40,6 @@ const { agents } = await import("../lib/mock-data/agents.js");
 const { customers } = await import("../lib/mock-data/customers.js");
 const { tickets } = await import("../lib/mock-data/tickets.js");
 const { messages } = await import("../lib/mock-data/messages.js");
-const { knowledgeArticles } = await import("../lib/mock-data/knowledge-articles.js");
 const { notifications } = await import("../lib/mock-data/notifications.js");
 
 // Placeholder credential for every seeded agent — no real auth exists yet
@@ -178,27 +176,6 @@ async function seedMessages(ticketIdMap, userIdMap, customerIdMap) {
   return count;
 }
 
-async function seedKnowledgeArticles(userIdMap) {
-  let count = 0;
-  for (const article of knowledgeArticles) {
-    const updatedAt = new Date(article.updatedAt);
-    await upsert(
-      KnowledgeArticle,
-      { legacyId: article.id },
-      {
-        title: article.title,
-        category: article.category,
-        excerpt: article.excerpt,
-        author: userIdMap.get(article.authorId) ?? null,
-        createdAt: updatedAt,
-        updatedAt,
-      }
-    );
-    count += 1;
-  }
-  return count;
-}
-
 async function seedNotifications(ticketIdMap, userIdMap) {
   let count = 0;
   for (const notification of notifications) {
@@ -224,14 +201,13 @@ async function seedNotifications(ticketIdMap, userIdMap) {
 }
 
 async function verify(teamIdMap, userIdMap, customerIdMap, ticketIdMap) {
-  const [teamCount, userCount, customerCount, ticketCount, messageCount, articleCount, notificationCount] =
+  const [teamCount, userCount, customerCount, ticketCount, messageCount, notificationCount] =
     await Promise.all([
       Team.countDocuments(),
       User.countDocuments(),
       Customer.countDocuments(),
       Ticket.countDocuments(),
       Message.countDocuments(),
-      KnowledgeArticle.countDocuments(),
       Notification.countDocuments(),
     ]);
 
@@ -241,7 +217,6 @@ async function verify(teamIdMap, userIdMap, customerIdMap, ticketIdMap) {
   console.log(`  customers:          ${customerCount} (expected ${customerIdMap.size})`);
   console.log(`  tickets:            ${ticketCount} (expected ${ticketIdMap.size})`);
   console.log(`  messages:           ${messageCount} (expected ${messages.length})`);
-  console.log(`  knowledgeArticles:  ${articleCount} (expected ${knowledgeArticles.length})`);
   console.log(`  notifications:      ${notificationCount} (expected ${notifications.length})`);
 
   const sampleTicket = await Ticket.findOne({ ticketNumber: "TCK-1042" })
@@ -277,9 +252,6 @@ async function main() {
 
   const messageCount = await seedMessages(ticketIdMap, userIdMap, customerIdMap);
   console.log(`Seeded messages: ${messageCount}`);
-
-  const articleCount = await seedKnowledgeArticles(userIdMap);
-  console.log(`Seeded knowledge articles: ${articleCount}`);
 
   const notificationCount = await seedNotifications(ticketIdMap, userIdMap);
   console.log(`Seeded notifications: ${notificationCount}`);

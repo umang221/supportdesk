@@ -26,7 +26,8 @@ analytics, and role-based admin — built end to end on Next.js and MongoDB.
   unassignment, and org management; admins manage users, teams, and SLA
   policy, with every sensitive action recorded to an audit log.
 - **Customer portal** — customers self-register, sign in, reset a forgotten
-  password, and create/view their own tickets — a separate session/cookie
+  password, and create/view their own tickets, and reply on their own
+  ticket's conversation thread (with attachments) — a separate session/cookie
   from the staff app (`server/services/customerAuthService.js`), so the two
   never collide in the same browser.
 - **Admin-managed agents** — agents and admins are never self-registered;
@@ -35,7 +36,22 @@ analytics, and role-based admin — built end to end on Next.js and MongoDB.
   to reset a locked-out agent's password.
 - **Email + attachments** — transactional email on ticket lifecycle events
   (dev-safe log transport by default) and secure, size/type-validated
-  attachment uploads via Cloudinary with signed, short-lived URLs.
+  ticket attachment uploads via Cloudinary, for both agents and customers.
+- **Profiles & avatars** — every staff and customer account has a
+  self-service profile page (`/profile`, `/portal/profile`): edit your own
+  name/title (staff) or name/phone/company (customer), upload a profile
+  photo, and change your own password (current-password-verified, and
+  invalidates every other active session for that account). Admin-only
+  fields (role, team, active status, plan) are never reachable through
+  these self-service routes.
+- **Audit logging** — every sensitive admin action *and* every self-service
+  profile/avatar/password change (staff or customer) is recorded to an
+  append-only audit log (`/admin/audit`), attributed to whichever account
+  actually performed it.
+- **Rate limiting** — beyond login, registration, and forgot-password,
+  self-service password changes, profile/avatar updates, and portal ticket
+  creation/messaging/attachment uploads are all throttled per-account
+  (`server/utils/rateLimit.js`).
 
 ## Tech stack
 
@@ -79,10 +95,12 @@ npm run lint
 npm run build
 ```
 
-Integration tests cover authentication, object-level authorization
-(assignment rules, notification ownership isolation), the ticket state
-machine, SLA calculations, and the full customer → agent reply → resolve
-flow. Every test cleans up exactly what it created.
+Integration tests cover authentication (staff and customer), object-level
+authorization (assignment rules, notification/ticket ownership isolation),
+the ticket state machine, SLA calculations, the full customer → agent
+reply → resolve flow, portal messaging/attachments, self-service
+profile/avatar/password changes and their audit-log entries, and rate-limit
+enforcement. Every test cleans up exactly what it created.
 
 ## Project structure
 
@@ -107,9 +125,19 @@ route handler or a background job.
 - Every sensitive operation re-derives the acting user from the server-side
   session and re-checks authorization there, never trusting a client-supplied
   role or id.
-- Passwords hashed with bcrypt; login is rate-limited per IP+account.
-- Uploaded files are validated (size/MIME allowlist) and served only via
+- Passwords hashed with bcrypt. Login, registration, forgot-password,
+  self-service password changes, self-service profile/avatar updates, and
+  portal ticket creation/messaging/attachment uploads are all rate-limited
+  (per IP+account for the auth routes, per-account for everything else,
+  since those already require a valid session).
+- Self-service password changes require the current password and invalidate
+  every other active session for that account.
+- Ticket attachments are validated (size/MIME allowlist) and served only via
   short-lived signed URLs, scoped to the ticket they were uploaded to.
+  Profile avatars are validated the same way but served via standard public
+  delivery (not signed/expiring) — a deliberate difference, since an avatar
+  needs a stable URL usable directly in the UI, and isn't sensitive content
+  the way a ticket attachment can be.
 - No secrets are committed — `.env.local` is gitignored; `.env.example`
   documents every variable with no real values.
 

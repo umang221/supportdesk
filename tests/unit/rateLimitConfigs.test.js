@@ -5,11 +5,15 @@ import { CHANGE_PASSWORD_RATE_LIMIT as CUSTOMER_CHANGE_PASSWORD_RATE_LIMIT } fro
 import { PORTAL_TICKET_CREATE_RATE_LIMIT } from "@/app/api/portal/tickets/route";
 import { PORTAL_MESSAGE_RATE_LIMIT } from "@/app/api/portal/tickets/[id]/messages/route";
 import { PORTAL_ATTACHMENT_RATE_LIMIT } from "@/app/api/portal/tickets/[id]/attachments/route";
+import { PROFILE_UPDATE_RATE_LIMIT as STAFF_PROFILE_UPDATE_RATE_LIMIT } from "@/app/api/users/me/route";
+import { AVATAR_UPLOAD_RATE_LIMIT as STAFF_AVATAR_UPLOAD_RATE_LIMIT } from "@/app/api/users/me/avatar/route";
+import { PROFILE_UPDATE_RATE_LIMIT as CUSTOMER_PROFILE_UPDATE_RATE_LIMIT } from "@/app/api/portal/customers/me/route";
+import { AVATAR_UPLOAD_RATE_LIMIT as CUSTOMER_AVATAR_UPLOAD_RATE_LIMIT } from "@/app/api/portal/customers/me/avatar/route";
 
 /**
- * Exercises the exact rate-limit configs each Task 23 route uses (imported
- * from the route files themselves, not re-typed here) against the real
- * checkRateLimit implementation — this is testing the deployed
+ * Exercises the exact rate-limit configs each Task 23/24 route uses
+ * (imported from the route files themselves, not re-typed here) against the
+ * real checkRateLimit implementation — this is testing the deployed
  * configuration, not a guess at what it might be. Route handlers
  * themselves aren't imported/called (see every other test file in this
  * suite): they depend on next/headers' cookies(), which only works inside
@@ -70,6 +74,52 @@ describe("Task 23 rate-limit configs", () => {
       PORTAL_TICKET_CREATE_RATE_LIMIT,
       PORTAL_MESSAGE_RATE_LIMIT,
       PORTAL_ATTACHMENT_RATE_LIMIT,
+    ]) {
+      expect(config.windowMs).toBeGreaterThan(0);
+      expect(config.max).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("Task 24 rate-limit configs", () => {
+  it("staff profile update: blocks after max attempts for one account", () => {
+    const accountKey = uniqueKey("profile-update:user");
+    for (let i = 0; i < STAFF_PROFILE_UPDATE_RATE_LIMIT.max; i += 1) {
+      expect(checkRateLimit(accountKey, STAFF_PROFILE_UPDATE_RATE_LIMIT).allowed).toBe(true);
+    }
+    expect(checkRateLimit(accountKey, STAFF_PROFILE_UPDATE_RATE_LIMIT).allowed).toBe(false);
+  });
+
+  it("staff avatar upload: blocks after max attempts for one account", () => {
+    const accountKey = uniqueKey("avatar-upload:user");
+    for (let i = 0; i < STAFF_AVATAR_UPLOAD_RATE_LIMIT.max; i += 1) {
+      expect(checkRateLimit(accountKey, STAFF_AVATAR_UPLOAD_RATE_LIMIT).allowed).toBe(true);
+    }
+    expect(checkRateLimit(accountKey, STAFF_AVATAR_UPLOAD_RATE_LIMIT).allowed).toBe(false);
+  });
+
+  it("customer profile update: blocks after max attempts for one account", () => {
+    const accountKey = uniqueKey("profile-update:customer");
+    for (let i = 0; i < CUSTOMER_PROFILE_UPDATE_RATE_LIMIT.max; i += 1) {
+      expect(checkRateLimit(accountKey, CUSTOMER_PROFILE_UPDATE_RATE_LIMIT).allowed).toBe(true);
+    }
+    expect(checkRateLimit(accountKey, CUSTOMER_PROFILE_UPDATE_RATE_LIMIT).allowed).toBe(false);
+  });
+
+  it("customer avatar upload: blocks after max attempts for one account", () => {
+    const accountKey = uniqueKey("avatar-upload:customer");
+    for (let i = 0; i < CUSTOMER_AVATAR_UPLOAD_RATE_LIMIT.max; i += 1) {
+      expect(checkRateLimit(accountKey, CUSTOMER_AVATAR_UPLOAD_RATE_LIMIT).allowed).toBe(true);
+    }
+    expect(checkRateLimit(accountKey, CUSTOMER_AVATAR_UPLOAD_RATE_LIMIT).allowed).toBe(false);
+  });
+
+  it("each of the four configs is sane (non-zero windowMs/max)", () => {
+    for (const config of [
+      STAFF_PROFILE_UPDATE_RATE_LIMIT,
+      STAFF_AVATAR_UPLOAD_RATE_LIMIT,
+      CUSTOMER_PROFILE_UPDATE_RATE_LIMIT,
+      CUSTOMER_AVATAR_UPLOAD_RATE_LIMIT,
     ]) {
       expect(config.windowMs).toBeGreaterThan(0);
       expect(config.max).toBeGreaterThan(0);

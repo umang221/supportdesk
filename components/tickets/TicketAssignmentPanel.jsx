@@ -10,7 +10,7 @@ export function TicketAssignmentPanel({ assignee, team, agents, assigneeId, onAs
       <h3 className="text-label-sm font-medium text-text-secondary">Assignment</h3>
 
       <div className="flex items-center gap-2">
-        <Avatar name={assignee?.name} />
+        <Avatar name={assignee?.name} src={assignee?.avatarUrl} />
         <label className="sr-only" htmlFor="ticket-assignee">
           Assignee
         </label>

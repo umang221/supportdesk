@@ -83,7 +83,7 @@ export function AdminCustomers({ customers, tickets }) {
                   <TableRow key={customer.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Avatar name={customer.name} size="sm" />
+                        <Avatar name={customer.name} src={customer.avatarUrl} size="sm" />
                         <div className="min-w-0">
                           <p className="truncate text-body-sm font-medium text-text-primary">{customer.name}</p>
                           <p className="truncate text-label-sm text-text-tertiary">{customer.email}</p>
