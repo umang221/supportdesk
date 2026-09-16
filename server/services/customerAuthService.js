@@ -6,6 +6,7 @@ import CustomerSession from "@/server/models/CustomerSession";
 import { HttpError } from "@/server/utils/http-error";
 import { generateToken, hashToken } from "@/server/utils/token";
 import { sendCustomerPasswordResetEmail } from "@/server/email/emailService";
+import { recordAudit } from "@/server/services/auditService";
 
 /**
  * Customer-facing counterpart to server/services/authService.js — kept as a
@@ -143,14 +144,37 @@ export async function updateOwnProfile(customerId, { name, phone, company }) {
   if (company !== undefined) update.company = company;
 
   const customer = await Customer.findByIdAndUpdate(customerId, { $set: update }, { returnDocument: "after", runValidators: true });
-  return customer ? sanitizeCustomer(customer) : null;
+  if (!customer) return null;
+
+  const sanitized = sanitizeCustomer(customer);
+  await recordAudit({
+    actingUser: sanitized,
+    actorModel: "Customer",
+    action: "customer.profile_update",
+    entityType: "Customer",
+    entityId: customer._id,
+    metadata: update,
+  });
+
+  return sanitized;
 }
 
 /** Self-service avatar update — persists the URL an upload already produced (see app/api/portal/customers/me/avatar/route.js). */
 export async function updateOwnAvatar(customerId, avatarUrl) {
   await connectDB();
   const customer = await Customer.findByIdAndUpdate(customerId, { $set: { avatarUrl } }, { returnDocument: "after" });
-  return customer ? sanitizeCustomer(customer) : null;
+  if (!customer) return null;
+
+  const sanitized = sanitizeCustomer(customer);
+  await recordAudit({
+    actingUser: sanitized,
+    actorModel: "Customer",
+    action: "customer.avatar_update",
+    entityType: "Customer",
+    entityId: customer._id,
+  });
+
+  return sanitized;
 }
 
 /**
@@ -185,6 +209,16 @@ export async function changeOwnPassword(customerId, currentPassword, newPassword
   await customer.save();
 
   await CustomerSession.deleteMany({ customer: customer._id, sessionToken: { $ne: currentSessionToken } });
+
+  // No metadata beyond the fact that it happened — same reasoning as
+  // userService.changeOwnPassword.
+  await recordAudit({
+    actingUser: sanitizeCustomer(customer),
+    actorModel: "Customer",
+    action: "customer.password_change",
+    entityType: "Customer",
+    entityId: customer._id,
+  });
 
   return true;
 }

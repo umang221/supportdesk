@@ -237,17 +237,27 @@ export async function updateOwnProfile(userId, { name, title }) {
   if (name !== undefined) update.name = name;
   if (title !== undefined) update.title = title;
 
-  return User.findByIdAndUpdate(userId, { $set: update }, { returnDocument: "after", runValidators: true }).select(
+  const user = await User.findByIdAndUpdate(userId, { $set: update }, { returnDocument: "after", runValidators: true }).select(
     "name email role team title isActive avatarUrl"
   );
+  if (!user) return null;
+
+  await recordAudit({ actingUser: user, action: "user.profile_update", entityType: "User", entityId: user._id, metadata: update });
+
+  return user;
 }
 
 /** Self-service avatar update — persists the URL an upload already produced (see app/api/users/me/avatar/route.js). */
 export async function updateOwnAvatar(userId, avatarUrl) {
   await connectDB();
-  return User.findByIdAndUpdate(userId, { $set: { avatarUrl } }, { returnDocument: "after" }).select(
+  const user = await User.findByIdAndUpdate(userId, { $set: { avatarUrl } }, { returnDocument: "after" }).select(
     "name email role team title isActive avatarUrl"
   );
+  if (!user) return null;
+
+  await recordAudit({ actingUser: user, action: "user.avatar_update", entityType: "User", entityId: user._id });
+
+  return user;
 }
 
 /**
@@ -281,6 +291,10 @@ export async function changeOwnPassword(userId, currentPassword, newPassword, cu
   await user.save();
 
   await Session.deleteMany({ user: user._id, sessionToken: { $ne: currentSessionToken } });
+
+  // No metadata beyond the fact that it happened — a password change has
+  // nothing safe/useful to record about *what* changed, only *that* it did.
+  await recordAudit({ actingUser: user, action: "user.password_change", entityType: "User", entityId: user._id });
 
   return true;
 }

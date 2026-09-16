@@ -2,15 +2,9 @@ import { NextResponse } from "next/server";
 import { requestPasswordReset } from "@/server/services/customerAuthService";
 import { validateForgotPasswordInput } from "@/server/validators/customerAuthValidators";
 import { toErrorResponse } from "@/server/utils/http-error";
-import { checkRateLimit } from "@/server/utils/rateLimit";
+import { checkRateLimit, getClientIp } from "@/server/utils/rateLimit";
 
 const FORGOT_PASSWORD_RATE_LIMIT = { windowMs: 60 * 60 * 1000, max: 5 };
-
-function getClientIp(request) {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  return request.headers.get("x-real-ip") ?? "unknown";
-}
 
 /** Always returns the same generic success response regardless of whether the email has an account — see customerAuthService.requestPasswordReset. */
 export async function POST(request) {

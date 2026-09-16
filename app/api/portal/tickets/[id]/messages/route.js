@@ -4,6 +4,13 @@ import { getTicketForCustomer } from "@/server/services/ticketService";
 import { listMessagesForCustomerTicket, createMessage } from "@/server/services/messageService";
 import { validateCreateMessageInput } from "@/server/validators/messageValidators";
 import { toErrorResponse } from "@/server/utils/http-error";
+import { checkRateLimit } from "@/server/utils/rateLimit";
+
+// Keyed by account id — bounds how many messages a single customer account
+// can post across all of their tickets, to stop a compromised/malicious
+// account from flooding the conversation thread (and the reply emails it
+// triggers).
+export const PORTAL_MESSAGE_RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 20 };
 
 /**
  * Customer-authenticated counterpart to app/api/tickets/[id]/messages.
@@ -41,6 +48,14 @@ export async function POST(request, { params }) {
   const customer = await getCurrentCustomer();
   if (!customer) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  }
+
+  const { allowed, retryAfterMs } = checkRateLimit(`portal-message:${customer.id}`, PORTAL_MESSAGE_RATE_LIMIT);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many messages sent. Please try again later.", code: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+    );
   }
 
   const { id } = await params;

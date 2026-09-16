@@ -2,15 +2,22 @@ import { connectDB } from "@/server/utils/db";
 import AuditLog from "@/server/models/AuditLog";
 
 /**
- * Records one admin action. Called from admin-facing services
- * (userService, teamService, slaPolicyService) right after the write they
- * describe succeeds — never speculatively before, so the log never claims
- * an action happened when it didn't. `actingUser` is always the
- * server-derived session user (see lib/auth/session.js), never client input.
+ * Records one action. Called from admin-facing services (userService,
+ * teamService, slaPolicyService) and self-service ones (userService's
+ * updateOwnProfile/updateOwnAvatar/changeOwnPassword, customerAuthService's
+ * equivalents) right after the write they describe succeeds — never
+ * speculatively before, so the log never claims an action happened when it
+ * didn't. `actingUser` is always a server-derived session principal (see
+ * lib/auth/session.js / lib/portal/current-customer.js), never client
+ * input — for a self-service action it's simply the account acting on
+ * itself. `actorModel` defaults to "User" (every admin-action call site
+ * predates customers being able to act at all) — pass "Customer" for a
+ * customer-originated action.
  */
-export async function recordAudit({ actingUser, action, entityType, entityId, metadata = {} }) {
+export async function recordAudit({ actingUser, actorModel = "User", action, entityType, entityId, metadata = {} }) {
   await connectDB();
   await AuditLog.create({
+    actorModel,
     actor: actingUser.id,
     actorName: actingUser.name,
     actorEmail: actingUser.email,

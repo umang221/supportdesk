@@ -3,6 +3,13 @@ import { getCurrentCustomer } from "@/lib/portal/current-customer";
 import { getTicketForCustomer } from "@/server/services/ticketService";
 import { uploadTicketAttachment } from "@/server/attachments/attachmentService";
 import { toErrorResponse } from "@/server/utils/http-error";
+import { checkRateLimit } from "@/server/utils/rateLimit";
+
+// Keyed by account id (this route already requires a session) — bounds how
+// many uploads a single customer account can push through regardless of
+// which ticket, to stop a compromised/malicious account from spamming
+// Cloudinary storage or the message thread with attachments.
+export const PORTAL_ATTACHMENT_RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 20 };
 
 /**
  * Customer-authenticated counterpart to app/api/tickets/[id]/attachments —
@@ -17,6 +24,14 @@ export async function POST(request, { params }) {
   const customer = await getCurrentCustomer();
   if (!customer) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  }
+
+  const { allowed, retryAfterMs } = checkRateLimit(`portal-attachment:${customer.id}`, PORTAL_ATTACHMENT_RATE_LIMIT);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many uploads. Please try again later.", code: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+    );
   }
 
   const { id } = await params;

@@ -28,6 +28,20 @@ const MAX_TRACKED_KEYS = 5000;
  * pruned on every call, so memory doesn't grow for a key that stops being
  * used.
  */
+/**
+ * Best-effort caller IP for a rate-limit key. Trusts `x-forwarded-for`/
+ * `x-real-ip` as set by the deployment's reverse proxy — fine for slowing
+ * down casual abuse the way every rate limit in this app already does, not
+ * meant to withstand a header-spoofing adversary bypassing a proxy that
+ * would normally overwrite it. Shared here (rather than a fourth-plus copy
+ * per route) since every rate-limited route needs the exact same value.
+ */
+export function getClientIp(request) {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) return forwardedFor.split(",")[0].trim();
+  return request.headers.get("x-real-ip") ?? "unknown";
+}
+
 export function checkRateLimit(key, { windowMs, max }) {
   const now = Date.now();
   const windowStart = now - windowMs;

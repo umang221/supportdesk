@@ -1,14 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 import { Avatar } from "@/components/ui/Avatar";
-import { SearchIcon, HelpIcon, MenuIcon } from "@/components/ui/icons";
+import { MenuIcon } from "@/components/ui/icons";
 import { NotificationBell } from "./NotificationBell";
 
 /**
- * Top app bar: mobile nav toggle, global search, and account/notification
- * actions. `user` is the sanitized session user from getCurrentUser(); omit
- * it on unauthenticated pages.
+ * Top app bar: mobile nav toggle, notifications, and the signed-in user's
+ * own avatar (links to /profile). `user` is the sanitized session user from
+ * getCurrentUser(); omit it on unauthenticated pages.
+ *
+ * A global "search tickets, customers, docs" box and a Help button used to
+ * live here — both were purely decorative (no onChange/onClick at all, and
+ * no search API or help destination existed to back them), which is worse
+ * than having no control at all: they invited a real interaction and
+ * silently did nothing. Removed rather than stubbed as "coming soon" —
+ * per-queue search already exists and works (see TicketQueue's own search
+ * input), and there's nothing this would add today beyond a promise to
+ * build it later.
  */
 export function Header({ onMenuClick, user, className }) {
   return (
@@ -27,32 +37,11 @@ export function Header({ onMenuClick, user, className }) {
         <MenuIcon className="h-5 w-5" />
       </button>
 
-      <label className="relative hidden max-w-md flex-1 items-center sm:flex">
-        <span className="sr-only">Search tickets, customers, docs</span>
-        <SearchIcon className="pointer-events-none absolute left-3 h-4 w-4 text-text-tertiary" />
-        <input
-          type="search"
-          placeholder="Search tickets, customers, docs..."
-          className="h-9 w-full rounded-lg border border-border-subtle bg-canvas-bg pl-9 pr-14 text-body-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-accent-subtle"
-        />
-        <span
-          aria-hidden="true"
-          className="absolute right-2 rounded border border-border-subtle bg-surface-hover px-space-xs py-space-2xs text-[11px] font-medium text-text-tertiary"
-        >
-          ⌘K
-        </span>
-      </label>
-
       <div className="ml-auto flex items-center gap-1">
         <NotificationBell />
-        <button
-          type="button"
-          aria-label="Help"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-surface-hover hover:text-text-primary"
-        >
-          <HelpIcon className="h-5 w-5" />
-        </button>
-        <Avatar name={user?.name} src={user?.avatarUrl} className="ml-1" />
+        <Link href="/profile" aria-label="Your profile" className="ml-1 rounded-full">
+          <Avatar name={user?.name} src={user?.avatarUrl} />
+        </Link>
       </div>
     </header>
   );

@@ -2,16 +2,10 @@ import { NextResponse } from "next/server";
 import { verifyCustomerCredentials, createCustomerSession } from "@/server/services/customerAuthService";
 import { validateCustomerLoginInput } from "@/server/validators/customerAuthValidators";
 import { CUSTOMER_SESSION_COOKIE_NAME } from "@/lib/portal/current-customer";
-import { checkRateLimit } from "@/server/utils/rateLimit";
+import { checkRateLimit, getClientIp } from "@/server/utils/rateLimit";
 import { toErrorResponse } from "@/server/utils/http-error";
 
 const LOGIN_RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 10 };
-
-function getClientIp(request) {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  return request.headers.get("x-real-ip") ?? "unknown";
-}
 
 export async function POST(request) {
   let body;

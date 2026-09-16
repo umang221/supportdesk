@@ -3,15 +3,9 @@ import { registerCustomer, createCustomerSession } from "@/server/services/custo
 import { validateCustomerRegisterInput } from "@/server/validators/customerAuthValidators";
 import { CUSTOMER_SESSION_COOKIE_NAME } from "@/lib/portal/current-customer";
 import { toErrorResponse } from "@/server/utils/http-error";
-import { checkRateLimit } from "@/server/utils/rateLimit";
+import { checkRateLimit, getClientIp } from "@/server/utils/rateLimit";
 
 const REGISTER_RATE_LIMIT = { windowMs: 60 * 60 * 1000, max: 10 };
-
-function getClientIp(request) {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  return request.headers.get("x-real-ip") ?? "unknown";
-}
 
 /** Public — customer self-registration (architecture decision: customers self-register, staff never do). Signs the new customer straight in. */
 export async function POST(request) {

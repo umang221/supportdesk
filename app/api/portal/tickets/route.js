@@ -4,12 +4,26 @@ import { validateCreatePortalTicketInput } from "@/server/validators/ticketValid
 import { createTicketForCustomer } from "@/server/services/ticketService";
 import { normalizeTicket } from "@/lib/api/ticket-adapter";
 import { toErrorResponse } from "@/server/utils/http-error";
+import { checkRateLimit } from "@/server/utils/rateLimit";
+
+// Keyed by account id — bounds how many tickets a single customer account
+// can create, to stop a compromised/malicious account from flooding the
+// queue (and the ticket-created emails it triggers).
+export const PORTAL_TICKET_CREATE_RATE_LIMIT = { windowMs: 60 * 60 * 1000, max: 20 };
 
 /** Customer-authenticated ticket creation — customer id always comes from the session, never the request body. */
 export async function POST(request) {
   const customer = await getCurrentCustomer();
   if (!customer) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  }
+
+  const { allowed, retryAfterMs } = checkRateLimit(`portal-ticket-create:${customer.id}`, PORTAL_TICKET_CREATE_RATE_LIMIT);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many tickets created. Please try again later.", code: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+    );
   }
 
   let body;
