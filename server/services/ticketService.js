@@ -11,8 +11,9 @@ import { assertValidStatusTransition } from "@/server/services/ticketStateMachin
 import { isValidObjectId } from "@/server/validators/ticketValidators";
 import { computeInitialSla, recalcSlaOnPriorityChange, recalcSlaOnStatusChange, getLiveSlaState } from "@/server/services/slaService";
 import { publish, REALTIME_EVENTS } from "@/server/realtime/eventBus";
-import { sendTicketCreatedEmail, sendTicketResolvedEmail } from "@/server/email/emailService";
+import { sendTicketCreatedEmail, sendTicketResolvedEmail, sendTicketAssignedEmail } from "@/server/email/emailService";
 import { createMessage } from "@/server/services/messageService";
+import { createNotification } from "@/server/services/notificationService";
 
 const TICKET_NUMBER_PREFIX = "TCK-";
 const MAX_TICKET_NUMBER_ATTEMPTS = 5;
@@ -231,6 +232,17 @@ export async function transitionTicketStatus(id, nextStatus) {
  * never be bypassed by another caller: team leads/admins may assign to
  * anyone, agents may only assign a ticket to themselves and may not
  * unassign. Returns null if the ticket doesn't exist.
+ *
+ * A notification + email are sent to the new assignee only when the
+ * assignee actually changes (comparing against the ticket's previous
+ * assignee) — reassigning a ticket to the agent who already holds it is a
+ * no-op for notification purposes, matching the SLA job's transition-only
+ * notification pattern (slaMonitorJob.js). Both are best-effort: a
+ * notification/email failure must never fail the assignment itself
+ * (createNotification doesn't swallow errors the way email does, so it's
+ * intentionally sent after the ticket write and its own realtime publish,
+ * with sendTicketAssignedEmail — internally fail-safe via emailProvider's
+ * safeSend — sent last).
  */
 export async function assignTicket(id, { assigneeId, actingUser }) {
   if (!isValidObjectId(id)) return null;
@@ -240,6 +252,7 @@ export async function assignTicket(id, { assigneeId, actingUser }) {
   if (!ticket) return null;
 
   const isPrivileged = hasRole(actingUser, ["team_lead", "admin"]);
+  const previousAssigneeId = ticket.assignee ? String(ticket.assignee) : null;
 
   if (assigneeId === null) {
     if (!isPrivileged) {
@@ -264,6 +277,18 @@ export async function assignTicket(id, { assigneeId, actingUser }) {
   await ticket.save();
   const updated = presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)));
   publish(REALTIME_EVENTS.TICKET_UPDATED, updated);
+
+  const assigneeChanged = assigneeId !== null && String(assigneeId) !== previousAssigneeId;
+  if (assigneeChanged) {
+    await createNotification({
+      type: "ticket_assigned",
+      message: `You've been assigned to ${updated.ticketNumber}: "${updated.subject}"`,
+      recipient: assigneeId,
+      relatedTicket: updated._id,
+    });
+    await sendTicketAssignedEmail(updated);
+  }
+
   return updated;
 }
 

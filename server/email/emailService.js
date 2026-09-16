@@ -61,6 +61,15 @@ export function sendCustomerReplyEmail({ ticket, message }) {
   );
 }
 
+export function sendTicketAssignedEmail(ticket) {
+  const agentName = ticket.assignee?.name ?? "there";
+  return safeSend(
+    ticket.assignee?.email,
+    `You've been assigned ticket ${ticket.ticketNumber}`,
+    `Hi ${agentName},\n\nYou've been assigned to ticket ${ticket.ticketNumber}: "${ticket.subject}".\n\n— SupportDesk`
+  );
+}
+
 export function sendSlaApproachingEmail(ticket) {
   return safeSend(
     ticket.assignee?.email,
