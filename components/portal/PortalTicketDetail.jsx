@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Badge, SlaIndicator, Avatar } from "@/components/ui";
 import { ChevronLeftIcon } from "@/components/ui/icons";
@@ -10,7 +10,8 @@ import { formatSlaCountdown } from "@/lib/utils/format-sla-countdown";
 import { useLiveNow } from "@/lib/hooks/use-live-now";
 import { TicketConversation, TicketMetaPanel } from "@/components/tickets";
 import { postPortalMessage } from "@/lib/api/portal";
-import { normalizeMessage } from "@/lib/api/ticket-adapter";
+import { normalizeMessage, normalizeTicket } from "@/lib/api/ticket-adapter";
+import { subscribePortalRealtime } from "@/lib/realtime/portalRealtimeClient";
 import { PortalReplyComposer } from "./PortalReplyComposer";
 
 function findMeta(list, value) {
@@ -25,9 +26,20 @@ const CLOSED_STATUSES = new Set(["resolved", "closed"]);
  * are excluded before this component ever sees the message list — filtered
  * server-side in messageService.listMessagesForCustomerTicket — so there's
  * no risk of leaking them here even if a reply later refetches messages.
+ *
+ * Live updates (agent replies, status/assignment changes made elsewhere)
+ * arrive over a ticket-scoped SSE connection (see
+ * lib/realtime/portalRealtimeClient.js and app/api/portal/realtime) —
+ * mirrors AgentWorkspace's realtime subscriptions, merging by id rather than
+ * refetching so the customer's own in-flight reply/composer state is never
+ * disturbed. REST remains the source of truth for this component's own
+ * mutations (handleReply); realtime only picks up changes made elsewhere.
  */
-export function PortalTicketDetail({ ticket, customer, assignee, team, messages: initialMessages, initialNow }) {
+export function PortalTicketDetail({ ticket: initialTicket, customer, assignee: initialAssignee, team: initialTeam, messages: initialMessages, initialNow }) {
   const now = useLiveNow(initialNow);
+  const [ticket, setTicket] = useState(initialTicket);
+  const [assignee, setAssignee] = useState(initialAssignee);
+  const [team, setTeam] = useState(initialTeam);
   const [messages, setMessages] = useState(initialMessages);
   const [replyError, setReplyError] = useState(null);
   const statusMeta = findMeta(STATUS_LIST, ticket.status);
@@ -45,6 +57,30 @@ export function PortalTicketDetail({ ticket, customer, assignee, team, messages:
       setReplyError(error.message || "Unable to send your reply.");
     }
   }
+
+  // Ticket-scoped: navigating to a different ticket unsubscribes (closing
+  // the old EventSource) and opens a fresh connection for the new ticketId,
+  // rather than reusing one connection across tickets — see
+  // portalRealtimeClient's doc comment for why this differs from the
+  // staff client's single whole-app connection.
+  useEffect(() => {
+    const unsubscribeMessage = subscribePortalRealtime(ticket.id, "message:created", (rawMessage) => {
+      const normalized = normalizeMessage(rawMessage);
+      setMessages((prev) => (prev.some((m) => m.id === normalized.id) ? prev : [...prev, normalized]));
+    });
+
+    const unsubscribeTicket = subscribePortalRealtime(ticket.id, "ticket:updated", (rawTicket) => {
+      const normalized = normalizeTicket(rawTicket);
+      setTicket(normalized);
+      setAssignee(normalized.assignee);
+      setTeam(normalized.team);
+    });
+
+    return () => {
+      unsubscribeMessage();
+      unsubscribeTicket();
+    };
+  }, [ticket.id]);
 
   return (
     <div className="flex flex-col gap-4">
