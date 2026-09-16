@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { Avatar } from "@/components/ui/Avatar";
-import { HomeIcon, TicketIcon, PlusIcon, UserIcon, MenuIcon, CloseIcon } from "@/components/ui/icons";
+import { HomeIcon, TicketIcon, PlusIcon, UserIcon, MenuIcon, CloseIcon, LogoutIcon } from "@/components/ui/icons";
+import { logoutCustomer } from "@/lib/api/portal";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/portal", icon: HomeIcon },
@@ -20,7 +22,19 @@ const NAV_ITEMS = [
  * read as distinct products sharing one design system.
  */
 export function PortalShell({ activeHref, customer, children }) {
+  const router = useRouter();
   const [isMenuOpen, setMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setIsLoggingOut(true);
+    try {
+      await logoutCustomer();
+    } finally {
+      router.push("/portal/login");
+      router.refresh();
+    }
+  }
 
   return (
     <div className="flex min-h-dvh flex-col bg-canvas-bg">
@@ -58,6 +72,16 @@ export function PortalShell({ activeHref, customer, children }) {
             <Avatar name={customer?.name} size="sm" />
             <button
               type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              aria-label="Sign out"
+              title="Sign out"
+              className="hidden h-8 w-8 items-center justify-center rounded-md text-text-secondary hover:bg-surface-hover disabled:opacity-50 md:inline-flex"
+            >
+              <LogoutIcon className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
               onClick={() => setMenuOpen((open) => !open)}
               aria-label="Toggle menu"
               aria-expanded={isMenuOpen}
@@ -92,12 +116,23 @@ export function PortalShell({ activeHref, customer, children }) {
                   </li>
                 );
               })}
+              <li className="border-t border-border-subtle pt-1">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="flex w-full items-center gap-2 rounded-md px-space-sm py-space-sm text-body-sm font-medium text-text-secondary hover:bg-surface-hover disabled:opacity-50"
+                >
+                  <LogoutIcon className="h-4 w-4" />
+                  Sign out
+                </button>
+              </li>
             </ul>
           </nav>
         ) : null}
       </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-space-lg py-space-lg">{children}</main>
+      <main id="main-content" className="mx-auto w-full max-w-5xl flex-1 px-space-lg py-space-lg">{children}</main>
     </div>
   );
 }

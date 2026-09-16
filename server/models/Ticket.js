@@ -3,7 +3,7 @@ import { PRIORITIES } from "@/lib/constants/priorities";
 import { STATUSES } from "@/lib/constants/statuses";
 import { SLA_STATES } from "@/lib/constants/sla-states";
 
-export const TICKET_CHANNELS = ["email", "chat", "phone"];
+export const TICKET_CHANNELS = ["email", "chat", "phone", "portal"];
 
 const ticketSchema = new mongoose.Schema(
   {

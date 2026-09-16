@@ -19,6 +19,13 @@ const userSchema = new mongoose.Schema(
     team: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
     avatarUrl: { type: String, trim: true },
     isActive: { type: Boolean, default: true },
+    // Set once, at invite time (server/services/userService.js's createUser)
+    // or by an admin-triggered reset — cleared the moment the token is
+    // used. While a token is pending, passwordHash is a random, unusable
+    // placeholder (see createUser), so the account simply can't log in
+    // until the invite/reset link is completed.
+    passwordSetupTokenHash: { type: String, select: false },
+    passwordSetupTokenExpiresAt: { type: Date, select: false },
   },
   { timestamps: true }
 );

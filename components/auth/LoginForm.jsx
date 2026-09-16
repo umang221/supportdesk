@@ -72,7 +72,11 @@ export function LoginForm({ redirectTo = "/tickets" }) {
         />
       </div>
 
-      {error ? <p className="text-label-sm text-sla-critical">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-label-sm text-sla-critical-text">
+          {error}
+        </p>
+      ) : null}
 
       <Button
         type="submit"

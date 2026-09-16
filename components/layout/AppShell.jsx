@@ -64,7 +64,7 @@ export function AppShell({ activeHref, user, sidebarFooter, navVariant, children
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Header user={user} onMenuClick={() => setMobileNavOpen(true)} />
-        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+        <main id="main-content" className="min-h-0 flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

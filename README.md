@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# SupportDesk
 
-## Getting Started
+A customer support ticketing and SLA management platform: a realtime agent
+workspace, automatic SLA tracking, Gemini-powered AI assist, real-data
+analytics, and role-based admin — built end to end on Next.js and MongoDB.
 
-First, run the development server:
+## Features
+
+- **Ticketing with a real state machine** — open/pending/on_hold/resolved/closed,
+  every transition validated server-side (`server/services/ticketStateMachine.js`).
+- **SLA automation** — a per-priority policy computes each ticket's deadline;
+  a background job (`server/jobs/slaMonitorJob.js`) sweeps active tickets,
+  keeps their SLA state current, and raises notifications/emails on
+  approaching/critical/breached transitions.
+- **Realtime workspace** — ticket, message, and notification updates stream
+  to connected agents over Server-Sent Events (`app/api/realtime`), so the
+  workspace stays live without polling or a manual refresh.
+- **AI assist (Gemini)** — on-demand ticket summaries, category/priority
+  suggestions, and drafted replies (`server/ai/`). Every suggestion is
+  advisory: nothing is ever auto-applied or auto-sent.
+- **Analytics** — ticket volume, resolution time, first-response time, SLA
+  compliance, and agent/team workload computed directly from MongoDB
+  (`server/services/analyticsService.js`), with an optional on-demand AI
+  narrative on top.
+- **Admin & RBAC** — agent/team_lead/admin roles gate assignment,
+  unassignment, and org management; admins manage users, teams, and SLA
+  policy, with every sensitive action recorded to an audit log.
+- **Customer portal** — customers self-register, sign in, reset a forgotten
+  password, and create/view their own tickets — a separate session/cookie
+  from the staff app (`server/services/customerAuthService.js`), so the two
+  never collide in the same browser.
+- **Admin-managed agents** — agents and admins are never self-registered;
+  an admin creates an agent account and the agent completes setup via a
+  one-time invite link (`/set-password`) — the same mechanism an admin uses
+  to reset a locked-out agent's password.
+- **Email + attachments** — transactional email on ticket lifecycle events
+  (dev-safe log transport by default) and secure, size/type-validated
+  attachment uploads via Cloudinary with signed, short-lived URLs.
+
+## Tech stack
+
+Next.js 16 (App Router, route handlers only — no separate API server) ·
+React 19 · MongoDB / Mongoose · Tailwind CSS v4 · bcryptjs (session auth) ·
+Gemini API · Cloudinary · Nodemailer · Vitest
+
+JavaScript throughout — no TypeScript.
+
+## Getting started
+
+Prerequisites: Node 20+, a local MongoDB instance (`mongodb://127.0.0.1:27017`
+by default).
 
 ```bash
+npm install
+cp .env.example .env.local   # fill in MONGODB_URI at minimum
+npm run seed                 # seeds demo teams, customers, agents, tickets
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 — the landing page is public.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- **Staff** sign in at `/login` with a seeded agent account (see the seed
+  script's output for the demo password). `hana.kobayashi@supportdesk.io`
+  is the permanent seeded demo admin account.
+- **Customers** sign in at `/portal/login` with any seeded customer email
+  (same demo password), or self-register a new account at `/portal/register`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+All other environment variables in `.env.example` (Cloudinary, email, Gemini)
+are optional in development: each feature degrades cleanly to a safe default
+(a clear "not configured" response, or a log-only transport) rather than
+crashing when its variables are unset.
 
-## Learn More
+## Testing
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm test        # vitest — unit + integration, against a disposable
+                 # `supportdesk_test` database, never the dev database
+npm run lint
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Integration tests cover authentication, object-level authorization
+(assignment rules, notification ownership isolation), the ticket state
+machine, SLA calculations, and the full customer → agent reply → resolve
+flow. Every test cleans up exactly what it created.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project structure
 
-## Deploy on Vercel
+```
+app/            Route handlers (app/api/**) and pages (App Router)
+components/     UI, organized by area (tickets, admin, analytics, portal, marketing, ui)
+server/         Business logic: models, services, validators, jobs, ai, email, attachments
+lib/            Client-side API wrappers, auth/session helpers, shared constants
+tests/          Vitest unit + integration tests
+scripts/        Database seed script
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Route handlers stay thin — request parsing and response shaping only.
+Business logic (validation, authorization, persistence) lives in
+`server/services/*`, so it's the same code path whether it's called from a
+route handler or a background job.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Security notes
+
+- Session auth via HTTP-only, `SameSite=Lax` cookies — never a client-readable
+  token.
+- Every sensitive operation re-derives the acting user from the server-side
+  session and re-checks authorization there, never trusting a client-supplied
+  role or id.
+- Passwords hashed with bcrypt; login is rate-limited per IP+account.
+- Uploaded files are validated (size/MIME allowlist) and served only via
+  short-lived signed URLs, scoped to the ticket they were uploaded to.
+- No secrets are committed — `.env.local` is gitignored; `.env.example`
+  documents every variable with no real values.
+
+## Known limitations
+
+- The knowledge base, team, and settings areas referenced in the original
+  product spec aren't built; the primary nav only links to what's actually
+  implemented.
+- This runs as a single Node process by design (in-memory job runner, event
+  bus, and rate limiter) — appropriate for its current scope, but it would
+  need a shared store (Redis, or similar) before running as multiple
+  instances behind a load balancer.

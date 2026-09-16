@@ -62,6 +62,44 @@ export function validateCreateTicketInput(data) {
   return { subject, customer: data.customer, team: data.team, priority, channel };
 }
 
+const MAX_DESCRIPTION_LENGTH = 10000;
+
+/**
+ * Validates POST /api/portal/tickets input — deliberately separate from
+ * validateCreateTicketInput since a customer never supplies customer/team
+ * (both are derived server-side, see ticketService.createTicketForCustomer)
+ * and does supply a `description`, which becomes the ticket's first message
+ * rather than a Ticket field.
+ */
+export function validateCreatePortalTicketInput(data) {
+  const errors = {};
+
+  const subject = typeof data?.subject === "string" ? data.subject.trim() : "";
+  if (!subject) errors.subject = "Subject is required.";
+  else if (subject.length > 200) errors.subject = "Subject must be 200 characters or fewer.";
+
+  const description = typeof data?.description === "string" ? data.description.trim() : "";
+  if (!description) errors.description = "Description is required.";
+  else if (description.length > MAX_DESCRIPTION_LENGTH) {
+    errors.description = `Description must be ${MAX_DESCRIPTION_LENGTH} characters or fewer.`;
+  }
+
+  let priority = PRIORITIES.MEDIUM;
+  if (data?.priority !== undefined) {
+    if (!PRIORITY_VALUES.includes(data.priority)) {
+      errors.priority = `Priority must be one of: ${PRIORITY_VALUES.join(", ")}.`;
+    } else {
+      priority = data.priority;
+    }
+  }
+
+  if (Object.keys(errors).length > 0) {
+    throw new HttpError(400, "Invalid ticket input.", { code: "validation_error", fieldErrors: errors });
+  }
+
+  return { subject, description, priority };
+}
+
 /**
  * Validates PATCH /api/tickets/:id input. Rejects the request outright if it
  * touches a protected field (rather than silently dropping it) so a client

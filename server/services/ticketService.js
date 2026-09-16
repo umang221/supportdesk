@@ -12,6 +12,7 @@ import { isValidObjectId } from "@/server/validators/ticketValidators";
 import { computeInitialSla, recalcSlaOnPriorityChange, recalcSlaOnStatusChange, getLiveSlaState } from "@/server/services/slaService";
 import { publish, REALTIME_EVENTS } from "@/server/realtime/eventBus";
 import { sendTicketCreatedEmail, sendTicketResolvedEmail } from "@/server/email/emailService";
+import { createMessage } from "@/server/services/messageService";
 
 const TICKET_NUMBER_PREFIX = "TCK-";
 const MAX_TICKET_NUMBER_ATTEMPTS = 5;
@@ -247,4 +248,40 @@ export async function assignTicket(id, { assigneeId, actingUser }) {
   const updated = presentTicket(await populateTicketRefs(Ticket.findById(ticket._id)));
   publish(REALTIME_EVENTS.TICKET_UPDATED, updated);
   return updated;
+}
+
+/**
+ * Creates a ticket on behalf of a signed-in customer (see
+ * app/api/portal/tickets/route.js — `customerId` is always the session
+ * customer, never client-supplied) and seeds it with their description as
+ * the first message, exactly like an agent-created ticket would get its
+ * first customer_reply. Customers don't choose a team (that's an internal
+ * routing detail), so this assigns the first team alphabetically as an
+ * inbound triage queue — an admin/team lead can reassign from there the
+ * same way they would any other unsorted ticket.
+ */
+export async function createTicketForCustomer({ subject, description, priority }, customerId) {
+  await connectDB();
+
+  const team = await Team.findOne().sort({ name: 1 });
+  if (!team) {
+    throw new HttpError(500, "No team is configured to receive new tickets yet.");
+  }
+
+  const ticket = await createTicket({
+    subject,
+    customer: customerId,
+    team: team._id.toString(),
+    priority,
+    channel: "portal",
+  });
+
+  await createMessage({
+    ticketId: ticket._id.toString(),
+    authorId: customerId,
+    authorModel: "Customer",
+    body: description,
+  });
+
+  return ticket;
 }

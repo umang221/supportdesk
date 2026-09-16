@@ -8,8 +8,11 @@ import { fetchAnalyticsInsights } from "@/lib/api/analytics";
 import { MetricCard } from "./MetricCard";
 import { BarChart } from "./BarChart";
 
+// "No data yet" rather than a bare "—": a dash reads as a rendering glitch
+// on a real metric tile, where this actually means "nothing has been
+// resolved/responded to/completed long enough to compute an average yet".
 function formatMinutes(minutes) {
-  if (minutes === null || minutes === undefined) return "—";
+  if (minutes === null || minutes === undefined) return "No data yet";
   if (minutes < 60) return `${Math.round(minutes)}m`;
   const hours = minutes / 60;
   if (hours < 24) return `${hours.toFixed(1)}h`;
@@ -17,7 +20,7 @@ function formatMinutes(minutes) {
 }
 
 function formatPercent(value) {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined) return "No data yet";
   return `${Math.round(value)}%`;
 }
 
@@ -89,13 +92,21 @@ export function AnalyticsDashboard({ initialSummary }) {
               </tr>
             </thead>
             <tbody>
-              {summary.workloadByAgent.map((row) => (
-                <TableRow key={row.agentId}>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.open}</TableCell>
-                  <TableCell>{row.total}</TableCell>
-                </TableRow>
-              ))}
+              {summary.workloadByAgent.length === 0 ? (
+                <tr>
+                  <TableCell colSpan={3} className="text-center text-text-tertiary">
+                    No tickets have been assigned to an agent yet.
+                  </TableCell>
+                </tr>
+              ) : (
+                summary.workloadByAgent.map((row) => (
+                  <TableRow key={row.agentId}>
+                    <TableCell>{row.name}</TableCell>
+                    <TableCell>{row.open}</TableCell>
+                    <TableCell>{row.total}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -110,13 +121,21 @@ export function AnalyticsDashboard({ initialSummary }) {
               </tr>
             </thead>
             <tbody>
-              {summary.workloadByTeam.map((row) => (
-                <TableRow key={row.teamId ?? "unassigned"}>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.open}</TableCell>
-                  <TableCell>{row.total}</TableCell>
-                </TableRow>
-              ))}
+              {summary.workloadByTeam.length === 0 ? (
+                <tr>
+                  <TableCell colSpan={3} className="text-center text-text-tertiary">
+                    No teams have any tickets yet.
+                  </TableCell>
+                </tr>
+              ) : (
+                summary.workloadByTeam.map((row) => (
+                  <TableRow key={row.teamId ?? "unassigned"}>
+                    <TableCell>{row.name}</TableCell>
+                    <TableCell>{row.open}</TableCell>
+                    <TableCell>{row.total}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </tbody>
           </table>
         </div>

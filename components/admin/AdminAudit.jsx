@@ -6,7 +6,14 @@ import { fetchAuditLog } from "@/lib/api/admin";
 import { normalizeAuditEntry } from "@/lib/api/admin-adapter";
 import { formatDateTime } from "@/lib/utils/format-datetime";
 
-/** Append-only admin action log (actor, action, entity, timestamp, metadata) — backed by /api/admin/audit. Read-only by design; there is nothing here to edit. */
+/**
+ * Append-only admin action log (actor, action, entity, timestamp, metadata)
+ * — backed by /api/admin/audit. Read-only by design; there is nothing here
+ * to edit. `initialEntries`/`initialTotalPages` only seed local state on
+ * mount; app/admin/audit/page.js remounts this component (via a `key` tied
+ * to the request) on every real navigation, including browser back/forward
+ * — see the identical note in AdminAgents.jsx.
+ */
 export function AdminAudit({ initialEntries, initialTotalPages }) {
   const [entries, setEntries] = useState(initialEntries);
   const [page, setPage] = useState(1);

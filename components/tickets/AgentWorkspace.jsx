@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WorkspaceLayout } from "@/components/layout/WorkspaceLayout";
-import { agents as mockAgents } from "@/lib/mock-data";
 import { fetchTickets, fetchUsers, updateTicketStatus, updateTicketPriority, assignTicket } from "@/lib/api/tickets";
 import { fetchTicketMessages, postTicketMessage } from "@/lib/api/messages";
 import { normalizeTicket, normalizeUser, normalizeMessage } from "@/lib/api/ticket-adapter";
@@ -175,7 +174,10 @@ export function AgentWorkspace({ initialNow }) {
     });
   }, []);
 
-  const mockAgentsById = useMemo(() => new Map(mockAgents.map((a) => [a.id, a])), []);
+  // TicketConversation's agentsById is only a fallback for the rare message
+  // missing an authorName (see its doc comment) — assignableAgents (the
+  // real user directory this workspace already fetches) covers that.
+  const agentsById = useMemo(() => new Map(assignableAgents.map((agent) => [agent.id, agent])), [assignableAgents]);
 
   // Every ticket already carries its own populated customer/assignee, so
   // rather than a separate fetch, these maps are just built from whatever
@@ -288,7 +290,7 @@ export function AgentWorkspace({ initialNow }) {
         assignee: selectedTicket.assignee,
         messages,
         isMessagesLoading,
-        agentsById: mockAgentsById,
+        agentsById,
         assignableAgents,
         error: actionError,
         onStatusChange: handleStatusChange,

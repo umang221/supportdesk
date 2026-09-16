@@ -4,32 +4,35 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button, Badge, Select } from "@/components/ui";
 import { PRIORITY_LIST } from "@/lib/constants/priorities";
+import { createPortalTicket } from "@/lib/api/portal";
 
 function findMeta(list, value) {
   return list.find((item) => item.value === value);
 }
 
-/**
- * UI-only "create ticket" flow: on submit it fabricates a reference number
- * and shows a confirmation, but doesn't add anything to the mock ticket list
- * or persist anywhere — there's no backend yet. Confirming in place (rather
- * than redirecting to a detail page for a ticket that doesn't really exist
- * in the data) keeps that limitation honest.
- */
+/** Creates a real ticket via POST /api/portal/tickets — the customer id is always derived from the session, never sent from here. */
 export function PortalNewTicketForm() {
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("medium");
   const [submitted, setSubmitted] = useState(null);
+  const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     if (!subject.trim() || !description.trim()) return;
-    setSubmitted({
-      id: `TCK-NEW-${Date.now().toString().slice(-4)}`,
-      subject: subject.trim(),
-      priority,
-    });
+
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      const { ticket } = await createPortalTicket({ subject, description, priority });
+      setSubmitted(ticket);
+    } catch (err) {
+      setError(err.fieldErrors ? Object.values(err.fieldErrors)[0] : err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function handleReset() {
@@ -37,6 +40,7 @@ export function PortalNewTicketForm() {
     setDescription("");
     setPriority("medium");
     setSubmitted(null);
+    setError(null);
   }
 
   if (submitted) {
@@ -48,7 +52,7 @@ export function PortalNewTicketForm() {
           We&rsquo;ve received your request and a member of our team will get back to you shortly.
         </p>
         <div className="flex items-center gap-2 rounded-md bg-canvas-bg px-space-md py-space-sm">
-          <span className="font-mono text-label-sm text-text-tertiary">{submitted.id}</span>
+          <span className="font-mono text-label-sm text-text-tertiary">{submitted.ticketNumber}</span>
           <Badge variant={priorityMeta?.badgeVariant}>{priorityMeta?.label}</Badge>
         </div>
         <p className="max-w-sm text-label-sm text-text-tertiary">&ldquo;{submitted.subject}&rdquo;</p>
@@ -119,9 +123,15 @@ export function PortalNewTicketForm() {
         />
       </div>
 
+      {error ? (
+        <p role="alert" className="text-label-sm text-sla-critical-text">
+          {error}
+        </p>
+      ) : null}
+
       <div className="flex items-center justify-end gap-2">
-        <Button type="submit" disabled={!subject.trim() || !description.trim()}>
-          Submit ticket
+        <Button type="submit" disabled={isSubmitting || !subject.trim() || !description.trim()}>
+          {isSubmitting ? "Submitting…" : "Submit ticket"}
         </Button>
       </div>
     </form>

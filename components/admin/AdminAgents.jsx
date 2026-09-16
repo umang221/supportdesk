@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Avatar, Select, Button, Badge, TableHeaderCell, TableRow, TableCell } from "@/components/ui";
 import { SearchIcon } from "@/components/ui/icons";
 import { ROLE_LIST } from "@/lib/constants/roles";
-import { createAdminUser, updateAdminUser } from "@/lib/api/admin";
+import { createAdminUser, updateAdminUser, deleteAdminUser, resetAdminUserPassword } from "@/lib/api/admin";
 import { normalizeAdminAgent } from "@/lib/api/admin-adapter";
 
 const OPEN_STATUSES = new Set(["open", "pending", "on_hold"]);
@@ -17,7 +17,6 @@ function matchesSearch(agent, query) {
 function NewAgentForm({ teams, onCreated }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [role, setRole] = useState("agent");
   const [teamId, setTeamId] = useState("");
   const [error, setError] = useState(null);
@@ -28,11 +27,10 @@ function NewAgentForm({ teams, onCreated }) {
     setError(null);
     setIsSubmitting(true);
     try {
-      const { user } = await createAdminUser({ name, email, password, role, team: teamId || null });
+      const { user } = await createAdminUser({ name, email, role, team: teamId || null });
       onCreated(normalizeAdminAgent(user));
       setName("");
       setEmail("");
-      setPassword("");
       setRole("agent");
       setTeamId("");
     } catch (err) {
@@ -43,66 +41,66 @@ function NewAgentForm({ teams, onCreated }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border-subtle p-space-md">
-      <div className="flex flex-col gap-1">
-        <label className="text-label-sm text-text-tertiary" htmlFor="new-agent-name">Name</label>
-        <input
-          id="new-agent-name"
-          required
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          className="h-8 rounded-md border border-border-subtle bg-surface-card px-2 text-body-sm text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent-subtle"
-        />
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2 rounded-lg border border-dashed border-border-subtle p-space-md">
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-1">
+          <label className="text-label-sm text-text-tertiary" htmlFor="new-agent-name">Name</label>
+          <input
+            id="new-agent-name"
+            required
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            className="h-8 rounded-md border border-border-subtle bg-surface-card px-2 text-body-sm text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent-subtle"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-label-sm text-text-tertiary" htmlFor="new-agent-email">Email</label>
+          <input
+            id="new-agent-email"
+            type="email"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="h-8 rounded-md border border-border-subtle bg-surface-card px-2 text-body-sm text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent-subtle"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-label-sm text-text-tertiary" htmlFor="new-agent-role">Role</label>
+          <Select id="new-agent-role" value={role} onChange={(event) => setRole(event.target.value)}>
+            {ROLE_LIST.map((item) => (
+              <option key={item.value} value={item.value}>{item.label}</option>
+            ))}
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-label-sm text-text-tertiary" htmlFor="new-agent-team">Team</label>
+          <Select id="new-agent-team" value={teamId} onChange={(event) => setTeamId(event.target.value)}>
+            <option value="">Unassigned</option>
+            {teams.map((team) => (
+              <option key={team.id} value={team.id}>{team.name}</option>
+            ))}
+          </Select>
+        </div>
+        <Button type="submit" size="compact" disabled={isSubmitting}>
+          {isSubmitting ? "Inviting…" : "Invite agent"}
+        </Button>
       </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-label-sm text-text-tertiary" htmlFor="new-agent-email">Email</label>
-        <input
-          id="new-agent-email"
-          type="email"
-          required
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          className="h-8 rounded-md border border-border-subtle bg-surface-card px-2 text-body-sm text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent-subtle"
-        />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-label-sm text-text-tertiary" htmlFor="new-agent-password">Temporary password</label>
-        <input
-          id="new-agent-password"
-          type="password"
-          required
-          minLength={8}
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          className="h-8 rounded-md border border-border-subtle bg-surface-card px-2 text-body-sm text-text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-accent-subtle"
-        />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-label-sm text-text-tertiary" htmlFor="new-agent-role">Role</label>
-        <Select id="new-agent-role" value={role} onChange={(event) => setRole(event.target.value)}>
-          {ROLE_LIST.map((item) => (
-            <option key={item.value} value={item.value}>{item.label}</option>
-          ))}
-        </Select>
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-label-sm text-text-tertiary" htmlFor="new-agent-team">Team</label>
-        <Select id="new-agent-team" value={teamId} onChange={(event) => setTeamId(event.target.value)}>
-          <option value="">Unassigned</option>
-          {teams.map((team) => (
-            <option key={team.id} value={team.id}>{team.name}</option>
-          ))}
-        </Select>
-      </div>
-      <Button type="submit" size="compact" disabled={isSubmitting}>
-        {isSubmitting ? "Adding…" : "Add agent"}
-      </Button>
-      {error ? <p className="w-full text-label-sm text-sla-critical-text">{error}</p> : null}
+      <p className="text-label-sm text-text-tertiary">
+        The agent gets an email with a link to set their own password — no password is set here.
+      </p>
+      {error ? <p className="text-label-sm text-sla-critical-text">{error}</p> : null}
     </form>
   );
 }
 
-/** Agent roster with per-agent workload, role/team editing, and account creation — backed by /api/admin/users. */
+/**
+ * Agent roster with per-agent workload, role/team editing, and account
+ * creation — backed by /api/admin/users. `initialAgents` only seeds local
+ * state on mount; app/admin/agents/page.js remounts this component (via a
+ * `key` tied to the request) on every real navigation, including browser
+ * back/forward, so a stale Router-Cache-restored instance never keeps
+ * showing old data under a URL that's already moved on.
+ */
 export function AdminAgents({ agents: initialAgents, teams, tickets }) {
   const [agents, setAgents] = useState(initialAgents);
   const [search, setSearch] = useState("");
@@ -126,6 +124,33 @@ export function AdminAgents({ agents: initialAgents, teams, tickets }) {
     } catch (err) {
       setRowError(err.message);
     } finally {
+      setPendingId(null);
+    }
+  }
+
+  async function handleResetPassword(agentId) {
+    setPendingId(agentId);
+    setRowError(null);
+    try {
+      await resetAdminUserPassword(agentId);
+    } catch (err) {
+      setRowError(err.message);
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  async function handleRemove(agent) {
+    if (!window.confirm(`Remove ${agent.name}? This permanently deletes their account and unassigns their tickets.`)) {
+      return;
+    }
+    setPendingId(agent.id);
+    setRowError(null);
+    try {
+      await deleteAdminUser(agent.id);
+      setAgents((current) => current.filter((item) => item.id !== agent.id));
+    } catch (err) {
+      setRowError(err.message);
       setPendingId(null);
     }
   }
@@ -174,7 +199,7 @@ export function AdminAgents({ agents: initialAgents, teams, tickets }) {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border-subtle">
-          <table className="w-full min-w-[820px] border-collapse">
+          <table className="w-full min-w-240 border-collapse">
             <thead>
               <tr>
                 <TableHeaderCell>Agent</TableHeaderCell>
@@ -182,7 +207,8 @@ export function AdminAgents({ agents: initialAgents, teams, tickets }) {
                 <TableHeaderCell>Team</TableHeaderCell>
                 <TableHeaderCell className="w-32">Open</TableHeaderCell>
                 <TableHeaderCell className="w-32">Total</TableHeaderCell>
-                <TableHeaderCell className="w-28">Active</TableHeaderCell>
+                <TableHeaderCell className="w-28">Status</TableHeaderCell>
+                <TableHeaderCell className="w-48"></TableHeaderCell>
               </tr>
             </thead>
             <tbody>
@@ -228,16 +254,39 @@ export function AdminAgents({ agents: initialAgents, teams, tickets }) {
                     <TableCell className="whitespace-nowrap">{open}</TableCell>
                     <TableCell className="whitespace-nowrap">{agentTickets.length}</TableCell>
                     <TableCell>
-                      <button
-                        type="button"
-                        disabled={isPending}
-                        onClick={() => handlePatch(agent.id, { isActive: !agent.isActive })}
-                        className="disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <Badge variant={agent.isActive ? "healthy" : "muted"}>
-                          {agent.isActive ? "Active" : "Deactivated"}
-                        </Badge>
-                      </button>
+                      <div className="flex flex-col items-start gap-1">
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => handlePatch(agent.id, { isActive: !agent.isActive })}
+                          className="disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <Badge variant={agent.isActive ? "healthy" : "muted"}>
+                            {agent.isActive ? "Active" : "Deactivated"}
+                          </Badge>
+                        </button>
+                        {agent.hasPendingInvite ? <Badge variant="approaching">Invited</Badge> : null}
+                      </div>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => handleResetPassword(agent.id)}
+                          className="text-label-sm text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {agent.hasPendingInvite ? "Resend invite" : "Reset password"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => handleRemove(agent)}
+                          className="text-label-sm text-sla-critical-text hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );

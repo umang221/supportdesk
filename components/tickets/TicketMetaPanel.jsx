@@ -1,6 +1,6 @@
 import { formatDateTime } from "@/lib/utils/format-datetime";
 
-const CHANNEL_LABELS = { email: "Email", chat: "Chat", phone: "Phone" };
+const CHANNEL_LABELS = { email: "Email", chat: "Chat", phone: "Phone", portal: "Customer Portal" };
 
 /** Ticket metadata: ID, channel, and the created/updated/due timestamps. */
 export function TicketMetaPanel({ ticket }) {

@@ -99,7 +99,13 @@ function NewTeamForm({ onCreated }) {
   );
 }
 
-/** Team roster: each team's description, headcount, ticket load, members, and creation — backed by /api/admin/teams. */
+/**
+ * Team roster: each team's description, headcount, ticket load, members,
+ * and creation — backed by /api/admin/teams. `initialTeams` only seeds
+ * local state on mount; app/admin/teams/page.js remounts this component
+ * (via a `key` tied to the request) on every real navigation, including
+ * browser back/forward — see the identical note in AdminAgents.jsx.
+ */
 export function AdminTeams({ teams: initialTeams, agents, tickets }) {
   const [teams, setTeams] = useState(initialTeams);
   const [search, setSearch] = useState("");

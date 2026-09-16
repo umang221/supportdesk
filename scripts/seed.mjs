@@ -74,6 +74,17 @@ async function seedTeams() {
   return idMap;
 }
 
+// Permanent seeded demo admin account (architecture decision: admins are
+// never self-registered or created via a first-run setup flow — this seed
+// override is the only place an admin account is ever created). Everyone
+// else's role still derives from their seed title.
+const SEEDED_ADMIN_EMAIL = "hana.kobayashi@supportdesk.io";
+
+function roleForSeededAgent(agent) {
+  if (agent.email === SEEDED_ADMIN_EMAIL) return "admin";
+  return agent.title === "Team Lead" ? "team_lead" : "agent";
+}
+
 async function seedUsers(teamIdMap) {
   const idMap = new Map();
   const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10);
@@ -85,7 +96,7 @@ async function seedUsers(teamIdMap) {
         name: agent.name,
         passwordHash,
         title: agent.title,
-        role: agent.title === "Team Lead" ? "team_lead" : "agent",
+        role: roleForSeededAgent(agent),
         team: teamIdMap.get(agent.teamId) ?? null,
         isActive: true,
       }
@@ -97,6 +108,10 @@ async function seedUsers(teamIdMap) {
 
 async function seedCustomers() {
   const idMap = new Map();
+  // Same placeholder credential as agents (SEED_PASSWORD) — lets every
+  // seeded customer sign into the portal for demo/testing without going
+  // through registration.
+  const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10);
   for (const customer of customers) {
     const doc = await upsert(
       Customer,
@@ -106,6 +121,7 @@ async function seedCustomers() {
         phone: customer.phone,
         company: customer.company,
         plan: customer.plan,
+        passwordHash,
       }
     );
     idMap.set(customer.id, doc._id);
@@ -270,7 +286,8 @@ async function main() {
 
   await verify(teamIdMap, userIdMap, customerIdMap, ticketIdMap);
 
-  console.log(`\nDone. Seeded agent accounts use the placeholder password "${SEED_PASSWORD}" until real auth ships.`);
+  console.log(`\nDone. Seeded agent and customer accounts use the placeholder password "${SEED_PASSWORD}".`);
+  console.log(`Demo admin account: ${SEEDED_ADMIN_EMAIL}`);
   process.exit(0);
 }
 

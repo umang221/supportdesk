@@ -13,6 +13,8 @@ import { sendEmail } from "./emailProvider";
  * but a failure surfaces only as a console.error, never a thrown error).
  */
 
+const APP_BASE_URL = process.env.APP_BASE_URL ?? "http://localhost:3000";
+
 async function safeSend(to, subject, text) {
   try {
     return await sendEmail({ to, subject, text });
@@ -72,5 +74,35 @@ export function sendSlaBreachedEmail(ticket) {
     ticket.assignee?.email,
     `SLA breached: ${ticket.ticketNumber}`,
     `Ticket ${ticket.ticketNumber} ("${ticket.subject}") has breached its SLA.\n\n— SupportDesk`
+  );
+}
+
+/** Sent when an admin creates an agent account — the account has no usable password until this link is completed (see userService.createUser). */
+export function sendAgentInviteEmail(user, token) {
+  const link = `${APP_BASE_URL}/set-password?token=${token}`;
+  return safeSend(
+    user.email,
+    "You've been invited to SupportDesk",
+    `Hi ${user.name},\n\nAn admin created a SupportDesk agent account for you. Set your password to finish setting up your account:\n\n${link}\n\nThis link expires in 24 hours.\n\n— SupportDesk`
+  );
+}
+
+/** Sent when an admin resets an agent's password on their behalf (e.g. they're locked out and can't self-serve). */
+export function sendAgentPasswordResetEmail(user, token) {
+  const link = `${APP_BASE_URL}/set-password?token=${token}`;
+  return safeSend(
+    user.email,
+    "Reset your SupportDesk password",
+    `Hi ${user.name},\n\nAn admin reset your SupportDesk password. Set a new one here:\n\n${link}\n\nThis link expires in 24 hours. If you didn't expect this, contact your admin.\n\n— SupportDesk`
+  );
+}
+
+/** Sent from the customer portal's "Forgot password" flow. Only ever called for an email that already has an account — see customerAuthService.requestPasswordReset. */
+export function sendCustomerPasswordResetEmail(customer, token) {
+  const link = `${APP_BASE_URL}/portal/reset-password?token=${token}`;
+  return safeSend(
+    customer.email,
+    "Reset your SupportDesk password",
+    `Hi ${customer.name},\n\nWe received a request to reset your SupportDesk password. Reset it here:\n\n${link}\n\nThis link expires in 1 hour. If you didn't request this, you can ignore this email.\n\n— SupportDesk`
   );
 }

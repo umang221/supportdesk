@@ -201,6 +201,32 @@ export function UserIcon(props) {
   );
 }
 
+export function SparkleIcon(props) {
+  return (
+    <IconBase {...props}>
+      <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+      <path d="M12 8.5 13.4 11l2.5 1.4-2.5 1.4L12 16.3l-1.4-2.5-2.5-1.4 2.5-1.4Z" />
+    </IconBase>
+  );
+}
+
+export function ShieldIcon(props) {
+  return (
+    <IconBase {...props}>
+      <path d="M12 3.5 5 6v5.5c0 4.6 3 7.7 7 9 4-1.3 7-4.4 7-9V6Z" />
+      <path d="M9 12l2 2 4-4.5" />
+    </IconBase>
+  );
+}
+
+export function BoltIcon(props) {
+  return (
+    <IconBase {...props}>
+      <path d="M13 3 5 13.5h5.5L11 21l8-11h-5.5Z" />
+    </IconBase>
+  );
+}
+
 export function LogoutIcon(props) {
   return (
     <IconBase {...props}>

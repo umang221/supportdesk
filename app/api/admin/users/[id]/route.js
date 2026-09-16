@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { assertApiRole } from "@/lib/auth/authorization";
-import { updateUser } from "@/server/services/userService";
+import { updateUser, deleteUser } from "@/server/services/userService";
 import { validateUpdateUserInput } from "@/server/validators/adminValidators";
 import { toErrorResponse } from "@/server/utils/http-error";
 
@@ -25,6 +25,24 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
     return NextResponse.json({ user: updated });
+  } catch (error) {
+    const { status, body } = toErrorResponse(error);
+    return NextResponse.json(body, { status });
+  }
+}
+
+/** Admin-only: permanently remove an agent account (see userService.deleteUser for what happens to their tickets/sessions). */
+export async function DELETE(_request, { params }) {
+  try {
+    const user = await getCurrentUser();
+    assertApiRole(user, ["admin"]);
+
+    const { id } = await params;
+    const removed = await deleteUser(id, user);
+    if (!removed) {
+      return NextResponse.json({ error: "User not found." }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true });
   } catch (error) {
     const { status, body } = toErrorResponse(error);
     return NextResponse.json(body, { status });

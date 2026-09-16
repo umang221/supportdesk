@@ -3,8 +3,11 @@ import { PRIORITIES } from "@/lib/constants/priorities";
 import { isValidObjectId } from "@/server/validators/ticketValidators";
 import { HttpError } from "@/server/utils/http-error";
 
-const MIN_PASSWORD_LENGTH = 8;
+export const MIN_PASSWORD_LENGTH = 8;
 
+// No `password` field: agents never get a password set on their behalf —
+// createUser() generates an invite link instead (architecture decision:
+// agents are admin-created but set their own password via invite).
 export function validateCreateUserInput(data) {
   const errors = {};
 
@@ -13,11 +16,6 @@ export function validateCreateUserInput(data) {
 
   const email = typeof data?.email === "string" ? data.email.trim() : "";
   if (!email || !email.includes("@")) errors.email = "A valid email is required.";
-
-  const password = typeof data?.password === "string" ? data.password : "";
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    errors.password = `Must be at least ${MIN_PASSWORD_LENGTH} characters.`;
-  }
 
   let role = data?.role ?? "agent";
   if (!USER_ROLES.includes(role)) errors.role = "Invalid role.";
@@ -31,7 +29,18 @@ export function validateCreateUserInput(data) {
     throw new HttpError(400, "Invalid user input.", { code: "validation_error", fieldErrors: errors });
   }
 
-  return { name, email, password, role, team: team || null, title };
+  return { name, email, role, team: team || null, title };
+}
+
+/** Shared shape/strength check for a new password — used by both the agent set-password and customer register/reset flows. */
+export function validatePasswordInput(password) {
+  if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
+    throw new HttpError(400, `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`, {
+      code: "validation_error",
+      fieldErrors: { password: `Must be at least ${MIN_PASSWORD_LENGTH} characters.` },
+    });
+  }
+  return password;
 }
 
 export function validateUpdateUserInput(data) {

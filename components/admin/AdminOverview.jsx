@@ -55,7 +55,7 @@ function TeamSummaryCard({ team, teamTickets }) {
       <div className="flex flex-wrap items-center gap-3 text-label-sm text-text-tertiary">
         <span>{teamTickets.length} total</span>
         <span>{open} open</span>
-        {breached > 0 ? <span className="text-sla-critical">{breached} breached</span> : null}
+        {breached > 0 ? <span className="text-sla-critical-text">{breached} breached</span> : null}
       </div>
     </Card>
   );

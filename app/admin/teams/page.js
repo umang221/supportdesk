@@ -18,10 +18,17 @@ export default async function AdminTeamsPage() {
     listTickets({ limit: 100 }),
   ]);
 
+  // Forces AdminTeams to remount with this render's data on every real
+  // navigation, including browser back/forward — see AdminAgentsPage's
+  // identical comment for the full reasoning.
+  // eslint-disable-next-line react-hooks/purity
+  const renderKey = Date.now();
+
   return (
     <AppShell activeHref="/admin/teams" navVariant="admin" user={user} sidebarFooter={<UserMenu user={user} />}>
       <div className="mx-auto w-full max-w-5xl p-space-lg">
         <AdminTeams
+          key={renderKey}
           teams={teams.map(normalizeAdminTeam)}
           agents={users.map(normalizeAdminAgent)}
           tickets={tickets.map(normalizeTicket)}

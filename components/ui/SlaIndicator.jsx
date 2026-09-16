@@ -1,11 +1,16 @@
 import { cn } from "@/lib/utils/cn";
 
+// Every state uses its darker "-text" token, not the base sla-* token — at
+// this component's small size (text-sla-counter, 12px), the base colors
+// (tuned for badge backgrounds/dots, not text on white) fall short of WCAG
+// AA contrast; the "-text" variants clear it while keeping the same color
+// meaning (green/amber/red).
 const VARIANT_TEXT_CLASSES = {
-  healthy: "text-sla-healthy",
-  completed: "text-sla-healthy",
-  approaching: "text-sla-approaching",
-  critical: "text-sla-critical",
-  breached: "text-sla-critical",
+  healthy: "text-sla-healthy-text",
+  completed: "text-sla-healthy-text",
+  approaching: "text-sla-approaching-text",
+  critical: "text-sla-critical-text",
+  breached: "text-sla-critical-text",
   paused: "text-text-tertiary",
 };
 

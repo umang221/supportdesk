@@ -65,7 +65,18 @@ function PolicyRow({ policy, onSaved }) {
   );
 }
 
-/** SLA policy (first-response / resolution windows) per priority — backed by /api/admin/sla-policy. Edits apply to the running process immediately (see lib/constants/sla-policy.js). */
+/**
+ * SLA policy (first-response / resolution windows) per priority — backed
+ * by /api/admin/sla-policy. Edits apply to the running process immediately
+ * (see lib/constants/sla-policy.js). `initialPolicies` only seeds local
+ * state on mount; app/admin/sla-policy/page.js remounts this component
+ * (via a `key` tied to the request) on every real navigation, including
+ * browser back/forward — see the identical note in AdminAgents.jsx. Each
+ * PolicyRow is additionally keyed by its own values (not just its
+ * priority, which never changes) so a successful save — which replaces
+ * that row's policy object one level up — remounts it with the freshly
+ * saved values too, rather than leaving its inputs holding what was typed.
+ */
 export function AdminSlaPolicy({ policies: initialPolicies }) {
   const [policies, setPolicies] = useState(initialPolicies);
 
@@ -95,7 +106,11 @@ export function AdminSlaPolicy({ policies: initialPolicies }) {
           </thead>
           <tbody>
             {policies.map((policy) => (
-              <PolicyRow key={policy.priority} policy={policy} onSaved={handleSaved} />
+              <PolicyRow
+                key={`${policy.priority}:${policy.firstResponseMinutes}:${policy.resolutionMinutes}`}
+                policy={policy}
+                onSaved={handleSaved}
+              />
             ))}
           </tbody>
         </table>

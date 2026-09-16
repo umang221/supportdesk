@@ -11,7 +11,9 @@
  * filtering itself, it only talks to the API safely.
  */
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+// gemini-2.0-flash was retired by the provider after this was first wired
+// up (Task 18) — the API's own 404 response names its replacement.
+const GEMINI_MODEL = "gemini-3.6-flash";
 const GEMINI_TIMEOUT_MS = 15_000;
 
 export class AiUnavailableError extends Error {

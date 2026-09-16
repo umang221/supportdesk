@@ -1,24 +1,14 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
-import {
-  HomeIcon,
-  TicketIcon,
-  CustomersIcon,
-  KnowledgeIcon,
-  AnalyticsIcon,
-  TeamIcon,
-  SettingsIcon,
-} from "@/components/ui/icons";
+import { TicketIcon, AnalyticsIcon, TeamIcon, ChevronLeftIcon } from "@/components/ui/icons";
 import { ADMIN_NAV_ITEMS } from "@/lib/admin/nav-items";
 
+// "/" is the public marketing landing page (app/page.js), not part of this
+// nav — a signed-in agent's "home" is the ticket workspace itself, which
+// Tickets below already covers, so there's no separate Home entry.
 export const DEFAULT_NAV_ITEMS = [
-  { label: "Home", href: "/", icon: HomeIcon },
   { label: "Tickets", href: "/tickets", icon: TicketIcon },
-  { label: "Customers", href: "/customers", icon: CustomersIcon },
-  { label: "Knowledge Base", href: "/knowledge", icon: KnowledgeIcon },
   { label: "Analytics", href: "/analytics", icon: AnalyticsIcon },
-  { label: "Team", href: "/team", icon: TeamIcon },
-  { label: "Settings", href: "/settings", icon: SettingsIcon },
   // UI-level convenience only — /admin/* is still enforced server-side by
   // requireRole in app/admin/layout.js regardless of whether this is shown.
   { label: "Admin", href: "/admin", icon: TeamIcon, roles: ["admin"] },
@@ -45,14 +35,31 @@ export function Sidebar({ items, variant = "default", activeHref, footer, role, 
   const navItems = (items ?? NAV_VARIANTS[variant] ?? DEFAULT_NAV_ITEMS).filter(
     (item) => !item.roles || item.roles.includes(role)
   );
+  const isAdminVariant = variant === "admin";
+
   return (
     <nav aria-label="Primary" className={cn("flex h-full w-60 flex-col bg-surface-card", className)}>
-      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border-subtle px-space-lg">
+      <Link
+        href="/tickets"
+        className="flex h-14 shrink-0 items-center gap-2 border-b border-border-subtle px-space-lg transition-colors hover:bg-surface-hover"
+      >
         <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-sm font-semibold text-white">
           S
         </span>
         <span className="text-label-md font-semibold text-text-primary">SupportDesk</span>
-      </div>
+      </Link>
+
+      {isAdminVariant ? (
+        <div className="shrink-0 border-b border-border-subtle p-space-sm">
+          <Link
+            href="/tickets"
+            className="flex items-center gap-2 rounded-md px-space-sm py-space-sm text-label-md text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary"
+          >
+            <ChevronLeftIcon className="h-4 w-4" />
+            Back to Workspace
+          </Link>
+        </div>
+      ) : null}
 
       <ul className="flex-1 space-y-1 overflow-y-auto p-space-sm">
         {navItems.map(({ label, href, icon: Icon }) => {
