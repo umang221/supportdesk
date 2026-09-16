@@ -1,5 +1,5 @@
-import { v2 as cloudinary } from "cloudinary";
 import { HttpError } from "@/server/utils/http-error";
+import { cloudinary, ensureCloudinaryConfigured, assertUploadsConfigured } from "./cloudinaryConfig";
 
 /**
  * Server-side Cloudinary integration for ticket message attachments.
@@ -37,32 +37,15 @@ function attachmentFolder(ticketId) {
   return `supportdesk/tickets/${ticketId}`;
 }
 
-/**
- * Checked by messageService before it writes a message with attachments —
- * deliberately called up front rather than only when getSignedAttachmentUrl
- * is reached partway through presenting the created message, so an
- * unconfigured environment fails before the DB write instead of after it
- * (which would otherwise leave a saved message whose attachment can never
- * get a working URL).
- */
-export function assertUploadsConfigured() {
-  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-    throw new HttpError(503, "File uploads are not configured.", { code: "uploads_disabled" });
-  }
-}
-
-let isConfigured = false;
-function ensureConfigured() {
-  if (isConfigured) return;
-  assertUploadsConfigured();
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-    secure: true,
-  });
-  isConfigured = true;
-}
+// assertUploadsConfigured is checked by messageService before it writes a
+// message with attachments — deliberately called up front rather than only
+// when getSignedAttachmentUrl is reached partway through presenting the
+// created message, so an unconfigured environment fails before the DB write
+// instead of after it (which would otherwise leave a saved message whose
+// attachment can never get a working URL). Re-exported here (rather than
+// only from cloudinaryConfig) so existing importers of this module don't
+// need to change.
+export { assertUploadsConfigured };
 
 function resourceTypeFor(mimeType) {
   return mimeType.startsWith("image/") ? "image" : "raw";
@@ -97,7 +80,7 @@ export function assertValidAttachmentFile(file) {
  */
 export async function uploadTicketAttachment(ticketId, file) {
   assertValidAttachmentFile(file);
-  ensureConfigured();
+  ensureCloudinaryConfigured();
 
   const mimeType = file.type;
   const resourceType = resourceTypeFor(mimeType);
@@ -130,7 +113,7 @@ export async function uploadTicketAttachment(ticketId, file) {
 
 /** Short-lived signed URL for an `authenticated`-delivery Cloudinary asset. Regenerated on every call — never persisted. */
 export function getSignedAttachmentUrl(publicId, resourceType) {
-  ensureConfigured();
+  ensureCloudinaryConfigured();
   return cloudinary.url(publicId, {
     resource_type: resourceType,
     type: "authenticated",

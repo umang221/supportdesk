@@ -14,11 +14,29 @@ function getInitials(name) {
 }
 
 /**
- * Initials avatar. Falls back to a generic silhouette when no `name` is
- * given, rather than inventing a placeholder person.
+ * Avatar image with an initials fallback — renders `src` (a user's
+ * uploaded avatarUrl) when given, otherwise falls back to initials, or a
+ * generic silhouette when there's no `name` either, rather than inventing a
+ * placeholder person.
  */
-export function Avatar({ name, size = "default", className, ...props }) {
+export function Avatar({ name, src, size = "default", className, ...props }) {
   const initials = name ? getInitials(name) : "";
+
+  if (src) {
+    // avatarUrl points at a Cloudinary public-delivery asset (see
+    // server/attachments/avatarService.js), not a signed/expiring URL, but is
+    // still user-supplied content best left out of next/image's
+    // remote-pattern allowlist and optimizer cache.
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={name || "Avatar"}
+        className={cn("inline-block shrink-0 rounded-full object-cover", SIZE_CLASSES[size], className)}
+        {...props}
+      />
+    );
+  }
 
   return (
     <span

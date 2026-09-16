@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui/Avatar";
 import { LogoutIcon } from "@/components/ui/icons";
 
 /**
- * Signed-in identity + logout, rendered into Sidebar's footer slot.
+ * Signed-in identity + logout, rendered into Sidebar's footer slot. The
+ * name/avatar is also the entry point into /profile — there's no separate
+ * nav item for it (Sidebar's DEFAULT_NAV_ITEMS is the primary work-area
+ * nav), so it lives here instead, next to the identity it belongs to.
  */
 export function UserMenu({ user }) {
   const router = useRouter();
@@ -26,11 +30,13 @@ export function UserMenu({ user }) {
 
   return (
     <div className="flex items-center gap-2">
-      <Avatar name={user.name} size="sm" />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-label-sm font-medium text-text-primary">{user.name}</p>
-        <p className="truncate text-[11px] text-text-tertiary">{user.title || user.email}</p>
-      </div>
+      <Link href="/profile" className="flex min-w-0 flex-1 items-center gap-2 rounded-md hover:bg-surface-hover">
+        <Avatar name={user.name} src={user.avatarUrl} size="sm" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-label-sm font-medium text-text-primary">{user.name}</p>
+          <p className="truncate text-[11px] text-text-tertiary">{user.title || user.email}</p>
+        </div>
+      </Link>
       <button
         type="button"
         onClick={handleLogout}

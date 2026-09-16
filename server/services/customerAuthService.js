@@ -27,6 +27,7 @@ function sanitizeCustomer(customerDoc) {
     phone: customerDoc.phone ?? null,
     company: customerDoc.company ?? null,
     plan: customerDoc.plan,
+    avatarUrl: customerDoc.avatarUrl ?? null,
   };
 }
 
@@ -125,6 +126,67 @@ export async function requestPasswordReset(email) {
   await customer.save();
 
   await sendCustomerPasswordResetEmail(customer, token);
+}
+
+/**
+ * Self-service profile update — name/phone/company only. `plan` is
+ * deliberately not updatable here (billing-controlled, stays admin-only —
+ * see the portal profile page's copy), and email/password each have their
+ * own dedicated, more sensitive flow.
+ */
+export async function updateOwnProfile(customerId, { name, phone, company }) {
+  await connectDB();
+
+  const update = {};
+  if (name !== undefined) update.name = name;
+  if (phone !== undefined) update.phone = phone;
+  if (company !== undefined) update.company = company;
+
+  const customer = await Customer.findByIdAndUpdate(customerId, { $set: update }, { returnDocument: "after", runValidators: true });
+  return customer ? sanitizeCustomer(customer) : null;
+}
+
+/** Self-service avatar update — persists the URL an upload already produced (see app/api/portal/customers/me/avatar/route.js). */
+export async function updateOwnAvatar(customerId, avatarUrl) {
+  await connectDB();
+  const customer = await Customer.findByIdAndUpdate(customerId, { $set: { avatarUrl } }, { returnDocument: "after" });
+  return customer ? sanitizeCustomer(customer) : null;
+}
+
+/**
+ * Self-service password change — same shape as userService.changeOwnPassword:
+ * verifies currentPassword server-side, then invalidates every other active
+ * session for this account (currentSessionToken is excluded so this doesn't
+ * also log the caller out). A customer with no password set yet (see the
+ * model's passwordHash comment) can never pass the current-password check,
+ * which is the correct outcome — there's nothing to "change" until they've
+ * registered or reset one.
+ */
+export async function changeOwnPassword(customerId, currentPassword, newPassword, currentSessionToken) {
+  await connectDB();
+
+  const customer = await Customer.findById(customerId).select("+passwordHash");
+  if (!customer?.passwordHash) {
+    throw new HttpError(400, "Current password is incorrect.", {
+      code: "validation_error",
+      fieldErrors: { currentPassword: "Incorrect password." },
+    });
+  }
+
+  const matches = await bcrypt.compare(currentPassword, customer.passwordHash);
+  if (!matches) {
+    throw new HttpError(400, "Current password is incorrect.", {
+      code: "validation_error",
+      fieldErrors: { currentPassword: "Incorrect password." },
+    });
+  }
+
+  customer.passwordHash = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
+  await customer.save();
+
+  await CustomerSession.deleteMany({ customer: customer._id, sessionToken: { $ne: currentSessionToken } });
+
+  return true;
 }
 
 /** Resets a password from a valid, unexpired token. Throws HttpError(400) otherwise. */

@@ -69,7 +69,7 @@ export function PortalShell({ activeHref, customer, children }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-2 md:ml-3">
-            <Avatar name={customer?.name} size="sm" />
+            <Avatar name={customer?.name} src={customer?.avatarUrl} size="sm" />
             <button
               type="button"
               onClick={handleLogout}

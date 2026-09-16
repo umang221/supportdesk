@@ -3,22 +3,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card } from "@/components/ui";
-import { ChangePasswordForm } from "@/components/profile/ChangePasswordForm";
-import { AvatarUploader } from "@/components/profile/AvatarUploader";
-import { updateOwnCustomerProfile, changeOwnCustomerPassword, uploadOwnCustomerAvatar } from "@/lib/api/portal";
+import { updateOwnProfile, changeOwnPassword, uploadOwnAvatar } from "@/lib/api/users";
+import { AvatarUploader } from "./AvatarUploader";
+import { ChangePasswordForm } from "./ChangePasswordForm";
 
 /**
- * Customer self-service account page: edit name/phone/company, upload an
- * avatar, and change password. `plan` and `email` stay read-only here —
- * plan is billing-controlled, email has its own (more sensitive) flow —
- * matching PATCH /api/portal/customers/me's allowed-field allowlist.
+ * Staff self-service account page: edit name/title, upload an avatar, and
+ * change password. Role/team/isActive are never editable here — those stay
+ * admin-only (see app/admin/agents), and the API route this posts to
+ * (PATCH /api/users/me) rejects them outright if ever sent.
  */
-export function PortalProfile({ customer: initialCustomer }) {
+export function StaffProfile({ user: initialUser }) {
   const router = useRouter();
-  const [customer, setCustomer] = useState(initialCustomer);
-  const [name, setName] = useState(initialCustomer?.name ?? "");
-  const [phone, setPhone] = useState(initialCustomer?.phone ?? "");
-  const [company, setCompany] = useState(initialCustomer?.company ?? "");
+  const [user, setUser] = useState(initialUser);
+  const [name, setName] = useState(initialUser.name);
+  const [title, setTitle] = useState(initialUser.title ?? "");
   const [fieldErrors, setFieldErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -36,12 +35,8 @@ export function PortalProfile({ customer: initialCustomer }) {
     setFieldErrors({});
     setSubmitting(true);
     try {
-      const { customer: updated } = await updateOwnCustomerProfile({
-        name: name.trim(),
-        phone: phone.trim(),
-        company: company.trim(),
-      });
-      setCustomer(updated);
+      const { user: updated } = await updateOwnProfile({ name: name.trim(), title: title.trim() });
+      setUser(updated);
       setSuccess(true);
       router.refresh();
     } catch (err) {
@@ -55,8 +50,12 @@ export function PortalProfile({ customer: initialCustomer }) {
     }
   }
 
-  function handleAvatarUploaded({ customer: updated }) {
-    setCustomer(updated);
+  async function handleAvatarUpload(file) {
+    return uploadOwnAvatar(file);
+  }
+
+  function handleAvatarUploaded({ user: updated }) {
+    setUser(updated);
     router.refresh();
   }
 
@@ -66,23 +65,18 @@ export function PortalProfile({ customer: initialCustomer }) {
 
       <Card>
         <h2 className="mb-3 text-label-sm font-medium text-text-secondary">Photo</h2>
-        <AvatarUploader
-          name={customer?.name}
-          src={customer?.avatarUrl}
-          uploadFn={uploadOwnCustomerAvatar}
-          onUploaded={handleAvatarUploaded}
-        />
+        <AvatarUploader name={user.name} src={user.avatarUrl} uploadFn={handleAvatarUpload} onUploaded={handleAvatarUploaded} />
       </Card>
 
       <Card>
-        <h2 className="mb-3 text-label-sm font-medium text-text-secondary">Contact details</h2>
+        <h2 className="mb-3 text-label-sm font-medium text-text-secondary">Account details</h2>
         <form onSubmit={handleProfileSubmit} noValidate className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="portal-profile-name" className="text-label-sm font-medium text-text-secondary">
-              Full name
+            <label htmlFor="staff-profile-name" className="text-label-sm font-medium text-text-secondary">
+              Name
             </label>
             <input
-              id="portal-profile-name"
+              id="staff-profile-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
               aria-invalid={Boolean(fieldErrors.name)}
@@ -96,37 +90,26 @@ export function PortalProfile({ customer: initialCustomer }) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="portal-profile-phone" className="text-label-sm font-medium text-text-secondary">
-              Phone <span className="text-text-tertiary">(optional)</span>
+            <label htmlFor="staff-profile-title" className="text-label-sm font-medium text-text-secondary">
+              Title <span className="text-text-tertiary">(optional)</span>
             </label>
             <input
-              id="portal-profile-phone"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              className="h-9 rounded-lg border border-border-subtle bg-canvas-bg px-space-sm text-body-sm text-text-primary focus:border-primary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-accent-subtle"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="portal-profile-company" className="text-label-sm font-medium text-text-secondary">
-              Company <span className="text-text-tertiary">(optional)</span>
-            </label>
-            <input
-              id="portal-profile-company"
-              value={company}
-              onChange={(event) => setCompany(event.target.value)}
+              id="staff-profile-title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="e.g. Senior Support Engineer"
               className="h-9 rounded-lg border border-border-subtle bg-canvas-bg px-space-sm text-body-sm text-text-primary focus:border-primary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-accent-subtle"
             />
           </div>
 
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-body-sm">
             <dt className="text-text-tertiary">Email</dt>
-            <dd className="text-text-primary">{customer?.email}</dd>
-            <dt className="text-text-tertiary">Plan</dt>
-            <dd className="text-text-primary">{customer?.plan}</dd>
+            <dd className="text-text-primary">{user.email}</dd>
+            <dt className="text-text-tertiary">Role</dt>
+            <dd className="capitalize text-text-primary">{user.role?.replace("_", " ")}</dd>
           </dl>
           <p className="text-label-sm text-text-tertiary">
-            To change your plan or email, please open a ticket with our support team.
+            Email and role are managed by an admin — contact one if either needs to change.
           </p>
 
           {formError ? (
@@ -142,7 +125,7 @@ export function PortalProfile({ customer: initialCustomer }) {
         </form>
       </Card>
 
-      <ChangePasswordForm onSubmit={changeOwnCustomerPassword} />
+      <ChangePasswordForm onSubmit={changeOwnPassword} />
     </div>
   );
 }

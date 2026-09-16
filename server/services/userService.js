@@ -222,3 +222,65 @@ export async function updateUser(id, patch, actingUser) {
 
   return user;
 }
+
+/**
+ * Self-service profile update — name/title only, called with the caller's
+ * own id from the session (see app/api/users/me/route.js). Deliberately a
+ * separate, narrower function from updateUser rather than that function
+ * reused with a restricted patch: this guarantees role/team/isActive can
+ * never reach this path, even if updateUser's allowed fields changed later.
+ */
+export async function updateOwnProfile(userId, { name, title }) {
+  await connectDB();
+
+  const update = {};
+  if (name !== undefined) update.name = name;
+  if (title !== undefined) update.title = title;
+
+  return User.findByIdAndUpdate(userId, { $set: update }, { returnDocument: "after", runValidators: true }).select(
+    "name email role team title isActive avatarUrl"
+  );
+}
+
+/** Self-service avatar update — persists the URL an upload already produced (see app/api/users/me/avatar/route.js). */
+export async function updateOwnAvatar(userId, avatarUrl) {
+  await connectDB();
+  return User.findByIdAndUpdate(userId, { $set: { avatarUrl } }, { returnDocument: "after" }).select(
+    "name email role team title isActive avatarUrl"
+  );
+}
+
+/**
+ * Self-service password change: verifies `currentPassword` before accepting
+ * `newPassword` (never trusts a client claim that it's already been
+ * checked), then invalidates every other active session for this account —
+ * the same "old credential stops working immediately" principle
+ * resetUserPassword already applies to an admin-triggered reset, extended
+ * here to sessions rather than the password itself, since the caller just
+ * proved they know the current one. `currentSessionToken` (the token making
+ * this very request) is excluded so changing your password doesn't also log
+ * you out.
+ */
+export async function changeOwnPassword(userId, currentPassword, newPassword, currentSessionToken) {
+  await connectDB();
+
+  const user = await User.findById(userId).select("+passwordHash");
+  if (!user) {
+    throw new HttpError(404, "User not found.", { code: "not_found" });
+  }
+
+  const matches = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!matches) {
+    throw new HttpError(400, "Current password is incorrect.", {
+      code: "validation_error",
+      fieldErrors: { currentPassword: "Incorrect password." },
+    });
+  }
+
+  user.passwordHash = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
+  await user.save();
+
+  await Session.deleteMany({ user: user._id, sessionToken: { $ne: currentSessionToken } });
+
+  return true;
+}

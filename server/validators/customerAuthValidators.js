@@ -62,3 +62,47 @@ export function validateResetPasswordInput(data) {
   const password = validatePasswordInput(data?.password);
   return { token, password };
 }
+
+const OWN_PROFILE_UPDATABLE_FIELDS = ["name", "phone", "company"];
+
+/**
+ * Validates PATCH /api/portal/customers/me input — deliberately rejects any
+ * field outside OWN_PROFILE_UPDATABLE_FIELDS (same pattern as
+ * adminValidators.validateUpdateOwnProfileInput), so `plan` (billing-
+ * controlled) and `email` (its own, more sensitive flow) can never be
+ * changed through this path even by mistake.
+ */
+export function validateCustomerUpdateProfileInput(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new HttpError(400, "Request body must be a JSON object.", { code: "validation_error" });
+  }
+
+  const disallowedFields = Object.keys(data).filter((key) => !OWN_PROFILE_UPDATABLE_FIELDS.includes(key));
+  if (disallowedFields.length > 0) {
+    throw new HttpError(400, `These fields cannot be changed here: ${disallowedFields.join(", ")}.`, {
+      code: "protected_field",
+      fieldErrors: Object.fromEntries(disallowedFields.map((key) => [key, "This field cannot be updated here."])),
+    });
+  }
+
+  const patch = {};
+  if (data.name !== undefined) {
+    const name = typeof data.name === "string" ? data.name.trim() : "";
+    if (!name) {
+      throw new HttpError(400, "Name cannot be empty.", { code: "validation_error", fieldErrors: { name: "Required." } });
+    }
+    patch.name = name;
+  }
+  if (data.phone !== undefined) {
+    patch.phone = typeof data.phone === "string" ? data.phone.trim() : "";
+  }
+  if (data.company !== undefined) {
+    patch.company = typeof data.company === "string" ? data.company.trim() : "";
+  }
+
+  if (Object.keys(patch).length === 0) {
+    throw new HttpError(400, "No updatable fields provided.", { code: "validation_error" });
+  }
+
+  return patch;
+}

@@ -52,7 +52,7 @@ export function Header({ onMenuClick, user, className }) {
         >
           <HelpIcon className="h-5 w-5" />
         </button>
-        <Avatar name={user?.name} className="ml-1" />
+        <Avatar name={user?.name} src={user?.avatarUrl} className="ml-1" />
       </div>
     </header>
   );

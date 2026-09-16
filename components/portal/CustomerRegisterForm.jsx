@@ -4,23 +4,9 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { registerCustomer } from "@/lib/api/portal";
+import { getPasswordStrength } from "@/lib/utils/password-strength";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** Cosmetic-only heuristic (length + character variety) — never enforced, just feedback while typing. */
-function getPasswordStrength(password) {
-  if (!password) return null;
-  let score = 0;
-  if (password.length >= 8) score += 1;
-  if (password.length >= 12) score += 1;
-  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1;
-  if (/\d/.test(password)) score += 1;
-  if (/[^A-Za-z0-9]/.test(password)) score += 1;
-
-  if (score <= 1) return { label: "Weak", className: "bg-sla-critical-text", width: "w-1/3" };
-  if (score <= 3) return { label: "Fair", className: "bg-sla-warning-text", width: "w-2/3" };
-  return { label: "Strong", className: "bg-sla-good-text", width: "w-full" };
-}
 
 export function CustomerRegisterForm() {
   const router = useRouter();
